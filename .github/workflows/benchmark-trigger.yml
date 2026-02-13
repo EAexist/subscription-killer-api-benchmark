@@ -28,9 +28,21 @@ jobs:
       - name: Extract Metadata from Image
         run: |
           # Set IMAGE_NAME from payload
-          echo "IMAGE_NAME=${{ github.event.client_payload.image_name }}" >> $GITHUB_ENV
+          IMAGE_NAME="${{ github.event.client_payload.image_name }}"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
           
-          docker pull ${{ env.IMAGE_NAME }}
+          # Debug: Print the IMAGE_NAME
+          echo "Debug: IMAGE_NAME='$IMAGE_NAME'"
+          
+          # Validation: Fail the build if IMAGE_NAME is empty
+          if [ -z "$IMAGE_NAME" ]; then
+            echo "ERROR: IMAGE_NAME is empty in payload. Check the repository dispatch payload."
+            echo "Available payload keys:"
+            echo "${{ toJson(github.event.client_payload) }}"
+            exit 1
+          fi
+          
+          docker pull "$IMAGE_NAME"
           
           # Extract labels
           RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' ${{ env.IMAGE_NAME }})
