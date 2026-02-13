@@ -1,4 +1,4 @@
-name: "DEBUG: Mock Benchmark Trigger"
+name: Mock Benchmark Trigger
 
 on:
   workflow_dispatch:
