@@ -8,6 +8,9 @@ on:
         required: true
         default: 'ghcr.io/eaexist/subscription-killer-api:9aa1b6698762d378893a4d40ff4bb5c8f587cfd3'
 
+permissions:
+  contents: write
+
 jobs:
   send-dispatch:
     runs-on: ubuntu-latest
