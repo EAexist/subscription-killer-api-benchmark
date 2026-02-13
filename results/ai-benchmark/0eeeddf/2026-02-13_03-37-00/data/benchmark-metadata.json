@@ -1,8 +1,0 @@
-{
-  "artifactName" : "subscription-killer-api",
-  "gitCommitHash" : "0eeeddf",
-  "tag" : "v1.0.0-alpha.2",
-  "dockerImage" : "com.matchalab/subscription-killer-api:0.0.1-SNAPSHOT-0eeeddf",
-  "generated" : "2026-02-13T03:37:05.815550500",
-  "test" : "Performance Benchmark"
-}

@@ -31,3 +31,9 @@ buildNumber.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Benchmark Results (ignore contents, keep directories)
+results/ai-benchmark/*
+!results/ai-benchmark/.gitkeep
+results/reports/*
+!results/reports/.gitkeep
