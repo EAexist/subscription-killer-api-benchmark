@@ -69,6 +69,12 @@
             # Clean up temporary files
             rm .env.spring.benchmark.part1 .env.spring.benchmark.part2
 
+        - name: Set up JDK
+          uses: actions/setup-java@v4
+          with:
+            java-version: '21'
+            distribution: 'temurin'
+
         - name: Run Benchmark
           env:
             # Only benchmark-specific variables
