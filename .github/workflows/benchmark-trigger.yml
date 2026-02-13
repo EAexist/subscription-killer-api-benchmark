@@ -45,8 +45,8 @@
             docker pull "$IMAGE_NAME"
             
             # Extract labels
-            RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' ${{ env.IMAGE_NAME }})
-            RAW_TAG=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.ref.name"}}' ${{ env.IMAGE_NAME }})
+            RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE_NAME")
+            RAW_TAG=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.ref.name"}}' "$IMAGE_NAME")
             
             # Validation: Fail the build if COMMIT is empty
             if [ -z "$RAW_COMMIT" ] || [ "$RAW_COMMIT" == "<no value>" ]; then
