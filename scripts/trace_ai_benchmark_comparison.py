@@ -6,8 +6,17 @@ Compares performance across different commits using Zipkin trace data.
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# Fix console encoding for emoji support
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+elif sys.platform.startswith('darwin'):
+    import os
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 from trace_parser import TraceParser
 from trace_statistics import TraceStatistics

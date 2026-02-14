@@ -18,7 +18,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -137,6 +139,7 @@ public class PerformanceBenchmarkTest {
         
         saveRawPrometheusMetrics(benchmarkDir);
         saveRawZipkinData(benchmarkDir);
+        saveSpringBootLogs(benchmarkDir);
         generateBenchmarkMetadata(benchmarkDir);
         generateBenchmarkComparison();
         
@@ -238,6 +241,43 @@ public class PerformanceBenchmarkTest {
             
         } catch (Exception e) {
             System.err.println("Error saving raw Zipkin data: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Saves Spring Boot application logs from the container.
+     */
+    private void saveSpringBootLogs(Path benchmarkDir) {
+        try {
+            // Get logs from the Spring Boot container
+            String logs = springApp.getLogs();
+            
+            if (logs != null && !logs.isEmpty()) {
+                // Save raw logs
+                Path logFile = benchmarkDir.resolve("data").resolve("spring-boot-logs.txt");
+                Files.createDirectories(logFile.getParent());
+                Files.write(logFile, logs.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                
+                // Also save as JSON wrapper for consistency
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode wrapper = mapper.createObjectNode();
+                wrapper.put("source", "spring-boot-container");
+                wrapper.put("containerId", springApp.getContainerId());
+                wrapper.put("contentType", "text/plain");
+                wrapper.put("rawData", logs);
+                
+                Path jsonFile = benchmarkDir.resolve("data").resolve("spring-boot-logs.json");
+                try (FileWriter writer = new FileWriter(jsonFile.toFile())) {
+                    writer.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(wrapper));
+                }
+                
+                System.out.println("✅ Spring Boot logs saved to: " + logFile);
+            } else {
+                System.err.println("⚠️  No Spring Boot logs available");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error saving Spring Boot logs: " + e.getMessage());
         }
     }
     
