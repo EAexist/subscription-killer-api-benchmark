@@ -2,7 +2,7 @@
 
   on:
     repository_dispatch:
-      types: [new_build]
+      types: [new_ai_benchmark_build]
 
   jobs:
     run-benchmark:
