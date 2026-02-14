@@ -328,9 +328,9 @@ def generate_comparison_table(benchmark_dirs: List[Tuple[str, str]]) -> str:
 
     # AI Token Count and Price Table
     table_lines.extend([
-        "# AI Cost Analysis Report",
+        "## 📊 Latest AI Cost Benchmark",
         "",
-        "## AI Token Usage and Cost",
+        "### AI Token Usage and Cost",
         "",
         f"| Metric | {' | '.join(display_names)} |",
         "|" + "|".join(["--------"] * (len(display_names) + 1)) + "|"
@@ -360,7 +360,7 @@ def generate_comparison_table(benchmark_dirs: List[Tuple[str, str]]) -> str:
 
     # Supplementary Performance Indicators Table
     table_lines.extend([
-        "## Supplementary Performance Indicators",
+        "### Supplementary Performance Indicators",
         "",
         "*Indicative metrics based on limited test iterations for development insights.*",
         "",
