@@ -16,9 +16,7 @@
   </p>
 </div>
 
-<!-- ABOUT THE PROJECT -->
-## 📊 Latest AI Cost Benchmark
-
+<!-- BENCHMARK_RESULTS -->
 <!-- BENCHMARK_RESULTS_START -->
 # AI Cost Analysis Report
 
