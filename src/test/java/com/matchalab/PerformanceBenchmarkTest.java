@@ -140,16 +140,20 @@ public class PerformanceBenchmarkTest {
         generateBenchmarkMetadata(benchmarkDir);
         generateBenchmarkComparison();
         
-        // Keep containers running for log inspection
-        System.out.println("=== Benchmark Completed ===");
-        System.out.println("Spring Boot: http://localhost:" + springApp.getMappedPort(8080));
-        System.out.println("Zipkin: http://localhost:" + zipkin.getMappedPort(9411));
-        System.out.println("Containers running. Press Ctrl+C to stop.");
-        
-        try {
-            Thread.sleep(300000); // Keep running for 5 minutes
-        } catch (InterruptedException e) {
-            System.out.println("Test interrupted");
+        // Keep containers running for log inspection (if enabled)
+        String keepContainers = System.getenv().getOrDefault("AI_BENCHMARK_KEEP_CONTAINERS", "false");
+        if ("true".equalsIgnoreCase(keepContainers)) {
+            System.out.println("=== Benchmark Completed ===");
+            System.out.println("Spring Boot: http://localhost:" + springApp.getMappedPort(8080));
+            System.out.println("Zipkin: http://localhost:" + zipkin.getMappedPort(9411));
+            System.out.println("Containers running. Press Ctrl+C to stop.");
+            
+            long waitTime = Long.parseLong(System.getenv().getOrDefault("AI_BENCHMARK_WAIT_TIME_MS", "300000"));
+            try {
+                Thread.sleep(waitTime);
+            } catch (InterruptedException e) {
+                System.out.println("Test interrupted");
+            }
         }
     }
     
