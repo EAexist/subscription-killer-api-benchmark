@@ -17,6 +17,14 @@
 </div>
 
 <!-- ABOUT THE PROJECT -->
+## 📊 Latest AI Cost Benchmark
+
+<!-- BENCHMARK_RESULTS_START -->
+This will be replaced automatically.
+<!-- BENCHMARK_RESULTS_END -->
+
+
+<!-- ABOUT THE PROJECT -->
 ## About The Project
 
 This is the official benchmarking suite for the Subscription Killer API project.

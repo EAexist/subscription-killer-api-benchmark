@@ -54,6 +54,12 @@
             exit 1
             fi
             
+            # Validation: Fail the build if TAG is empty
+            if [ -z "$RAW_TAG" ] || [ "$RAW_TAG" == "<no value>" ]; then
+            echo "ERROR: OCI Ref Name (tag) missing in image metadata. Ensure Gradle build passes -PGIT_TAG."
+            exit 1
+            fi
+            
             echo "APP_GIT_COMMIT=$RAW_COMMIT" >> $GITHUB_ENV
             echo "APP_GIT_TAG=$RAW_TAG" >> $GITHUB_ENV
 
@@ -94,10 +100,62 @@
             chmod +x run-ai-benchmark.sh
             ./run-ai-benchmark.sh
 
+        - name: Generate Comparison Reports
+          if: success()
+          run: |
+            echo "📊 Generating AI benchmark comparison reports..."
+            python scripts/trace_ai_benchmark_comparison.py
+            echo "✅ Comparison reports generated"
+
         - name: Upload Results
           uses: actions/upload-artifact@v4
           if: always()
           with:
             name: ai-benchmark-results-${{ env.APP_GIT_COMMIT }}
-            path: results/ai-benchmark/
+            path: |
+              results/ai-benchmark/
+              results/reports/
             retention-days: 30
+
+        - name: Display Benchmark Results
+          run: |
+            cat results/reports/*.md >> $GITHUB_STEP_SUMMARY
+
+        - name: Inject benchmark report into README
+          run: |
+            set -e
+            
+            LATEST_REPORT=$(ls -t results/reports/*.md | head -n 1)
+            
+            if [ -z "$LATEST_REPORT" ]; then
+              echo "No report found!"
+              exit 1
+            fi
+            
+            echo "Injecting $LATEST_REPORT into README.md"
+            
+            awk '
+              BEGIN {inside=0}
+              /<!-- BENCHMARK_RESULTS_START -->/ {
+                print
+                while ((getline line < "'"$LATEST_REPORT"'") > 0)
+                  print line
+                close("'"$LATEST_REPORT"'")
+                inside=1
+                next
+              }
+              /<!-- BENCHMARK_RESULTS_END -->/ {
+                inside=0
+              }
+              !inside
+            ' README.md > README.tmp
+            
+            mv README.tmp README.md
+
+        - name: Commit and Push README
+          run: |
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            git commit -m "docs: auto-update benchmark results [skip ci]" || echo "No changes"
+            git push
