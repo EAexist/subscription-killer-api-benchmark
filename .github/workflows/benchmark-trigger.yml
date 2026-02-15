@@ -115,7 +115,8 @@
             if ! grep -q "<!-- BENCHMARK_RESULTS_START -->" README.md; then
               echo "⚠️ README.md doesn't have benchmark table structure. Creating initial report first..."
               # Use deprecated script to create initial report
-              python scripts/create_initial_benchmark_report.py --commit ${{ env.APP_GIT_COMMIT }} --dir $(find results/ai-benchmark/${{ env.APP_GIT_COMMIT }} -name "*json" | head -1 | xargs dirname)
+              BENCHMARK_DIR="results/ai-benchmark/${{ env.APP_GIT_COMMIT }}/$(ls results/ai-benchmark/${{ env.APP_GIT_COMMIT }})"
+              python scripts/create_initial_benchmark_report.py --commit ${{ env.APP_GIT_COMMIT }} --dir "$BENCHMARK_DIR"
               
               # Inject initial report into README
               LATEST_REPORT=$(ls -t results/reports/*.md | head -n 1)
@@ -138,7 +139,7 @@
             else
               echo "📝 Adding column to existing benchmark table..."
               # Find the benchmark data directory for current commit
-              BENCHMARK_DIR=$(find results/ai-benchmark/${{ env.APP_GIT_COMMIT }} -name "*json" | head -1 | xargs dirname)
+              BENCHMARK_DIR="results/ai-benchmark/${{ env.APP_GIT_COMMIT }}/$(ls results/ai-benchmark/${{ env.APP_GIT_COMMIT }})"
               
               # Create intermediate report file in results/reports/
               TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
@@ -186,8 +187,6 @@
 
         - name: Display Benchmark Results
           run: |
-            echo "## 📊 Benchmark Results" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
             
             # Extract and display benchmark section from README.md
             if [ -f "README.md" ]; then
