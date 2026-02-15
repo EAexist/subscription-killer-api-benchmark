@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Trace-based Benchmark Comparison Script - Column Addition Only
-This script adds columns to existing benchmark comparison reports.
-For creating initial reports, use create_initial_benchmark_report.py (deprecated) or trace_ai_benchmark_comparison.py --mode create
+DEPRECATED: Initial Benchmark Report Creation Script
+This script contains the deprecated functionality for creating initial benchmark reports.
+Use trace_ai_benchmark_comparison.py --mode create for new implementations.
 """
 
 import json
@@ -306,56 +306,21 @@ def read_benchmark_metadata(dir_path: str) -> Dict[str, Any]:
         return {}
 
 
-def _load_all_commit_data(new_commit_hash: str, new_dir_path: str) -> Tuple[Dict[str, Dict[str, Any]], List[Tuple[str, str]]]:
-    """Load all commit data including new commit."""
-    base_path = os.path.join(os.path.dirname(__file__), "..", "results", "ai-benchmark")
-    all_benchmark_dirs = find_benchmark_directories(base_path)
+def create_initial_benchmark_report(commit_hash: str, dir_path: str) -> str:
+    """Create initial benchmark report with single column."""
+    metrics = extract_commit_metrics(commit_hash, dir_path)
+    if not metrics:
+        return "No valid benchmark data found."
     
-    commits_data = {}
+    # Store metadata with metrics
+    metadata = read_benchmark_metadata(dir_path)
+    metrics['_tag'] = metadata.get('tag', commit_hash[:8])
     
-    # Load data for existing commits
-    for commit_hash, dir_path in all_benchmark_dirs:
-        try:
-            metrics = extract_commit_metrics(commit_hash, dir_path)
-            if metrics:
-                metadata = read_benchmark_metadata(dir_path)
-                metrics['_tag'] = metadata.get('tag', commit_hash[:8])
-                commits_data[commit_hash] = metrics
-                print(f"Info: Loaded metrics for {commit_hash}: {len(metrics)-1} metrics")
-        except Exception as e:
-            print(f"Error processing existing commit {commit_hash}: {e}")
+    commits_data = {commit_hash: metrics}
+    sorted_commits = [commit_hash]
+    display_names = [metrics['_tag']]
     
-    # Process new commit
-    new_metrics = extract_commit_metrics(new_commit_hash, new_dir_path)
-    if not new_metrics:
-        print(f"Error: No valid benchmark data for {new_commit_hash}")
-        return {}, []
-    
-    metadata = read_benchmark_metadata(new_dir_path)
-    new_metrics['_tag'] = metadata.get('tag', new_commit_hash[:8])
-    commits_data[new_commit_hash] = new_metrics
-    print(f"Info: Loaded metrics for new commit {new_commit_hash}: {len(new_metrics)-1} metrics")
-    
-    if not commits_data:
-        print("Error: No valid benchmark data found")
-        return {}, []
-    
-    # Sort commits by tag and prepare directories
-    sorted_commits = sorted(commits_data.keys(), key=lambda x: commits_data[x]['_tag'])
-    final_dirs = []
-    
-    for commit in sorted_commits:
-        matching_dir = None
-        for bh_commit, bh_dir in all_benchmark_dirs:
-            if bh_commit == commit:
-                matching_dir = bh_dir
-                break
-        if commit == new_commit_hash:
-            matching_dir = new_dir_path
-        if matching_dir:
-            final_dirs.append((commit, matching_dir))
-    
-    return commits_data, final_dirs
+    return _build_markdown_content(commits_data, sorted_commits, display_names, [(commit_hash, dir_path)])
 
 
 def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]], 
@@ -384,10 +349,12 @@ def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]],
                 
                 # Add percentage change for AI Cost (except for first column)
                 if metric == 'AI Cost' and value is not None:
+                    # Get first column value for comparison
                     first_commit = sorted_commits[0]
                     first_value = commits_data[first_commit].get(metric)
                     
                     if commit == first_commit:
+                        # First column - no percentage
                         row_values.append(format_metric_value(metric, value, std_dev))
                     elif first_value is not None and first_value > 0:
                         percentage_change = ((value - first_value) / first_value) * 100
@@ -401,6 +368,7 @@ def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]],
                 else:
                     row_values.append(format_metric_value(metric, value, std_dev))
 
+            # Add reference mark for AI Cost
             metric_display = f"{metric}*" if metric == 'AI Cost' else metric
             table_lines.append(f"| {metric_display} | {' | '.join(row_values)} |")
 
@@ -430,6 +398,7 @@ def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]],
             for commit in sorted_commits:
                 value = commits_data[commit].get(metric)
                 
+                # Special handling for Indicative Latency
                 if metric == 'Indicative Latency':
                     test_iterations = commits_data[commit].get('Test Iterations', 1)
                     row_values.append(format_indicative_latency(value, test_iterations))
@@ -441,18 +410,22 @@ def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]],
 
     table_lines.append("")
 
-    # Add footer note with iteration info
+    # Add simple footer note with iteration info from execution summary
+    test_iterations = [commits_data[commit].get('Test Iterations', 0) for commit in sorted_commits]
+    total_traces = [commits_data[commit].get('Total Benchmark Traces', 0) for commit in sorted_commits]
+    
+    # Read execution summary for accurate iteration counts
     execution_summaries = {}
     for commit_hash, dir_path in benchmark_dirs:
         summary = read_execution_summary(dir_path)
         if summary:
             execution_summaries[commit_hash] = summary
 
-    test_iterations = [commits_data[commit].get('Test Iterations', 0) for commit in sorted_commits]
-    total_traces = [commits_data[commit].get('Total Benchmark Traces', 0) for commit in sorted_commits]
-
     if test_iterations and total_traces and execution_summaries:
         avg_iterations = sum(test_iterations) // len(test_iterations)
+        avg_total_traces = sum(total_traces) // len(total_traces)
+        
+        # Get warmup iterations from execution summary
         warmup_iterations = 0
         if execution_summaries:
             first_commit = sorted_commits[0]
@@ -467,80 +440,35 @@ def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]],
     return "\n".join(table_lines)
 
 
-def _update_readme_with_new_content(existing_readme_path: str, new_content: str) -> bool:
-    """Update README.md by replacing the benchmark section with new content."""
-    try:
-        with open(existing_readme_path, 'r', encoding='utf-8') as f:
-            readme_content = f.read()
-        
-        lines = readme_content.split('\n')
-        start_idx = None
-        end_idx = None
-        
-        for i, line in enumerate(lines):
-            if '<!-- BENCHMARK_RESULTS_START -->' in line:
-                start_idx = i
-            elif '<!-- BENCHMARK_RESULTS_END -->' in line:
-                end_idx = i
-                break
-        
-        if start_idx is None or end_idx is None:
-            print("Error: Could not find benchmark section markers in README.md")
-            return False
-        
-        new_lines = lines[:start_idx] + [new_content] + lines[end_idx+1:]
-        
-        with open(existing_readme_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(new_lines))
-        
-        return True
-        
-    except Exception as e:
-        print(f"Error updating README.md: {e}")
-        return False
-
-
 def main():
-    """Main function to add column to existing benchmark report."""
+    """Main function for deprecated initial report creation."""
     import argparse
     
-    parser = argparse.ArgumentParser(description='AI Benchmark Column Addition Tool')
-    parser.add_argument('--existing-report', required=True, help='Path to existing report')
-    parser.add_argument('--commit', required=True, help='Commit hash for new column')
-    parser.add_argument('--dir', required=True, help='Directory path for new benchmark data')
+    parser = argparse.ArgumentParser(description='DEPRECATED: Initial Benchmark Report Creation Tool')
+    parser.add_argument('--commit', required=True, help='Commit hash for initial report')
+    parser.add_argument('--dir', required=True, help='Directory path for benchmark data')
     
     args = parser.parse_args()
     
-    # Load all commit data (shared logic for both modes)
-    commits_data, final_dirs = _load_all_commit_data(args.commit, args.dir)
-    if not commits_data:
-        return False
+    print("DEPRECATED: This script is archived. Use trace_ai_benchmark_comparison.py --mode create for new implementations.")
+    print(f"Creating initial benchmark report for {args.commit}...")
     
-    sorted_commits = sorted(commits_data.keys(), key=lambda x: commits_data[x]['_tag'])
-    display_names = [commits_data[commit]['_tag'] for commit in sorted_commits]
+    content = create_initial_benchmark_report(args.commit, args.dir)
     
-    # Build markdown content
-    new_content = _build_markdown_content(commits_data, sorted_commits, display_names, final_dirs)
+    if content == "No valid benchmark data found.":
+        print("No valid benchmark data found.")
+        return
     
-    # Handle different output modes
-    if 'README.md' in args.existing_report:
-        print(f"Adding column for {args.commit} to README.md...")
-        success = _update_readme_with_new_content(args.existing_report, new_content)
-        if success:
-            print(f"Successfully added column for {args.commit} to {args.existing_report}")
-        else:
-            print(f"Failed to update {args.existing_report}")
-        return success
-    else:
-        # Create intermediate report file
-        print(f"Creating intermediate report for {args.commit}...")
-        os.makedirs(os.path.dirname(args.existing_report), exist_ok=True)
-        
-        with open(args.existing_report, 'w', encoding='utf-8') as f:
-            f.write(new_content)
-        
-        print(f"Successfully created intermediate report: {args.existing_report}")
-        return True
+    # Save report
+    from pathlib import Path
+    reports_dir = Path(os.path.join(os.path.dirname(__file__), "..", "results", "reports"))
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    output_file = reports_dir / f"ai-benchmark_{args.commit}_1commit_{Path(args.dir).name}.md"
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    print(f"Initial benchmark report saved to {output_file}")
 
 
 if __name__ == "__main__":

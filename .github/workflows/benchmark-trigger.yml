@@ -102,16 +102,65 @@
             chmod +x run-ai-benchmark.sh
             ./run-ai-benchmark.sh
 
-        - name: Generate Comparison Reports
+        - name: Add Column to Existing README Report
           if: success()
           env:
             # AI Cost Benchmark configuration
             GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
             GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION }}
           run: |
-            echo "📊 Generating AI benchmark comparison reports..."
-            python scripts/trace_ai_benchmark_comparison.py
-            echo "✅ Comparison reports generated"
+            echo "📊 Adding new benchmark column to existing README.md report..."
+            
+            # Check if README.md has benchmark table structure
+            if ! grep -q "<!-- BENCHMARK_RESULTS_START -->" README.md; then
+              echo "⚠️ README.md doesn't have benchmark table structure. Creating initial report first..."
+              # Use deprecated script to create initial report
+              python scripts/create_initial_benchmark_report.py --commit ${{ env.APP_GIT_COMMIT }} --dir $(find results/ai-benchmark/${{ env.APP_GIT_COMMIT }} -name "*json" | head -1 | xargs dirname)
+              
+              # Inject initial report into README
+              LATEST_REPORT=$(ls -t results/reports/*.md | head -n 1)
+              awk '
+                BEGIN {inside=0}
+                /<!-- BENCHMARK_RESULTS_START -->/ {
+                  print
+                  while ((getline line < "'"$LATEST_REPORT"'") > 0)
+                    print line
+                  close("'"$LATEST_REPORT"'")
+                  inside=1
+                  next
+                }
+                /<!-- BENCHMARK_RESULTS_END -->/ {
+                  inside=0
+                }
+                !inside
+              ' README.md > README.tmp
+              mv README.tmp README.md
+            else
+              echo "📝 Adding column to existing benchmark table..."
+              # Find the benchmark data directory for current commit
+              BENCHMARK_DIR=$(find results/ai-benchmark/${{ env.APP_GIT_COMMIT }} -name "*json" | head -1 | xargs dirname)
+              
+              # Create intermediate report file in results/reports/
+              TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+              INTERMEDIATE_REPORT="results/reports/ai-benchmark_${{ env.APP_GIT_COMMIT }}_intermediate_${TIMESTAMP}.md"
+              
+              # Generate intermediate report content
+              python scripts/trace_ai_benchmark_comparison.py \
+                --existing-report "$INTERMEDIATE_REPORT" \
+                --commit ${{ env.APP_GIT_COMMIT }} \
+                --dir "$BENCHMARK_DIR"
+              
+              echo "✅ Intermediate report saved to $INTERMEDIATE_REPORT"
+              
+              # Update README.md with the same content
+              python scripts/trace_ai_benchmark_comparison.py \
+                --existing-report "README.md" \
+                --commit ${{ env.APP_GIT_COMMIT }} \
+                --dir "$BENCHMARK_DIR"
+              
+              echo "✅ README.md updated successfully"
+            fi
+            echo "✅ Benchmark report updated"
 
         - name: Upload Results
           uses: actions/upload-artifact@v4
@@ -125,38 +174,22 @@
 
         - name: Display Benchmark Results
           run: |
-            cat results/reports/*.md >> $GITHUB_STEP_SUMMARY
-
-        - name: Inject benchmark report into README
-          run: |
-            set -e
+            echo "## 📊 Benchmark Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
             
-            LATEST_REPORT=$(ls -t results/reports/*.md | head -n 1)
-            
-            if [ -z "$LATEST_REPORT" ]; then
-              echo "No report found!"
-              exit 1
+            # Extract and display benchmark section from README.md
+            if [ -f "README.md" ]; then
+              awk '
+                /<!-- BENCHMARK_RESULTS_START -->/, /<!-- BENCHMARK_RESULTS_END -->/ {
+                  if ($0 !~ /<!-- BENCHMARK_RESULTS_.*-->/) {
+                    print
+                  }
+                }
+              ' README.md >> $GITHUB_STEP_SUMMARY
+            else
+              # Fallback to report files if README.md doesn't exist
+              cat results/reports/*.md >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No benchmark reports found" >> $GITHUB_STEP_SUMMARY
             fi
-            
-            echo "Injecting $LATEST_REPORT into README.md"
-            
-            awk '
-              BEGIN {inside=0}
-              /<!-- BENCHMARK_RESULTS_START -->/ {
-                print
-                while ((getline line < "'"$LATEST_REPORT"'") > 0)
-                  print line
-                close("'"$LATEST_REPORT"'")
-                inside=1
-                next
-              }
-              /<!-- BENCHMARK_RESULTS_END -->/ {
-                inside=0
-              }
-              !inside
-            ' README.md > README.tmp
-            
-            mv README.tmp README.md
 
         - name: Commit and Push README
           run: |
