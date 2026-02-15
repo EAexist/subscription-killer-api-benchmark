@@ -467,6 +467,208 @@ def _build_markdown_content(commits_data: Dict[str, Dict[str, Any]],
     return "\n".join(table_lines)
 
 
+def _parse_existing_table(existing_content: str) -> Tuple[List[str], Dict[str, Dict[str, str]]]:
+    """Parse existing table to extract headers and data."""
+    lines = existing_content.split('\n')
+    
+    # Find header row
+    header_row = None
+    for line in lines:
+        if line.startswith('| Metric |') and 'AI Cost' in line:
+            header_row = line
+            break
+    
+    if not header_row:
+        return [], {}
+    
+    # Extract column headers (git tags)
+    headers = [h.strip() for h in header_row.split('|')[1:-1]]  # Remove first and last empty elements
+    
+    # Parse data rows
+    table_data = {}
+    for line in lines:
+        if line.startswith('| ') and ' | ' in line:
+            parts = [p.strip() for p in line.split('|')[1:-1]]  # Remove first and last empty elements
+            if len(parts) == len(headers) + 1:  # +1 for metric name
+                metric_name = parts[0]
+                table_data[metric_name] = {headers[i]: parts[i+1] for i in range(len(headers))}
+    
+    return headers, table_data
+
+
+def _update_table_with_new_column(existing_headers: List[str], existing_data: Dict[str, Dict[str, str]], 
+                              new_commit: str, new_tag: str, new_metrics: Dict[str, Any]) -> Tuple[List[str], Dict[str, Dict[str, str]]]:
+    """Update table by replacing existing column or adding new column."""
+    
+    # Check if tag already exists
+    if new_tag in existing_headers:
+        # Replace existing column
+        col_index = existing_headers.index(new_tag)
+        print(f"Replacing existing column for tag: {new_tag}")
+    else:
+        # Add new column
+        col_index = len(existing_headers)
+        existing_headers.append(new_tag)
+        print(f"Adding new column for tag: {new_tag}")
+    
+    # Update data with new metrics
+    for metric_name, value in new_metrics.items():
+        if metric_name == '_tag':
+            continue
+            
+        if metric_name not in existing_data:
+            existing_data[metric_name] = {}
+        
+        # Format the value
+        if metric_name == 'AI Cost':
+            # Calculate percentage change relative to first column
+            if len(existing_headers) > 1:
+                first_tag = existing_headers[0]
+                first_value_str = existing_data.get(metric_name, {}).get(first_tag, '')
+                try:
+                    # Extract numeric value from first column
+                    first_value = float(first_value_str.split('$')[1].split()[0]) if first_value_str and '$' in first_value_str else 0
+                    current_value = float(value) if value is not None else 0
+                    
+                    if col_index == 0:  # First column, no percentage
+                        formatted_value = format_metric_value(metric_name, value)
+                    elif first_value > 0:
+                        percentage_change = ((current_value - first_value) / first_value) * 100
+                        base_formatted = format_metric_value(metric_name, value)
+                        if percentage_change >= 0:
+                            formatted_value = f"{base_formatted} (+{percentage_change:.1f}%)"
+                        else:
+                            formatted_value = f"{base_formatted} ({percentage_change:.1f}%)"
+                    else:
+                        formatted_value = format_metric_value(metric_name, value)
+                except:
+                    formatted_value = format_metric_value(metric_name, value)
+            else:
+                formatted_value = format_metric_value(metric_name, value)
+        else:
+            std_dev = new_metrics.get('Latency Std Dev') if 'Latency' in metric_name else None
+            formatted_value = format_metric_value(metric_name, value, std_dev)
+        
+        existing_data[metric_name][new_tag] = formatted_value
+    
+    return existing_headers, existing_data
+
+
+def _build_updated_table_content(headers: List[str], table_data: Dict[str, Dict[str, str]], 
+                             benchmark_dirs: List[Tuple[str, str]]) -> str:
+    """Build updated table content from parsed data."""
+    table_lines = []
+    
+    # AI Token Usage and Cost section
+    table_lines.extend([
+        "### AI Token Usage and Cost",
+        "",
+        f"| Metric | {' | '.join(headers)} |",
+        "|" + "|".join(["--------"] * (len(headers) + 1)) + "|"
+    ])
+    
+    # AI metrics
+    for metric in AI_METRICS:
+        if metric in table_data:
+            metric_display = f"{metric}*" if metric == 'AI Cost' else metric
+            row_values = [table_data[metric].get(header, '') for header in headers]
+            table_lines.append(f"| {metric_display} | {' | '.join(row_values)} |")
+    
+    table_lines.extend([
+        "",
+        "*Model: gemini-3-flash-preview. Input Token Price: $" + os.getenv('GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION', '0') + " / million. Output Token Price: $" + os.getenv('GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION', '0') + " / million.",
+        "",
+        "### Supplementary Performance Indicators",
+        "",
+        f"| Metric | {' | '.join(headers)} |",
+        "|" + "|".join(["--------"] * (len(headers) + 1)) + "|"
+    ])
+    
+    # Supplementary metrics
+    for metric in SUPPLEMENTARY_METRICS:
+        if metric in table_data:
+            row_values = [table_data[metric].get(header, '') for header in headers]
+            table_lines.append(f"| {metric} | {' | '.join(row_values)} |")
+    
+    table_lines.append("")
+    
+    # Add footer note with iteration info
+    execution_summaries = {}
+    for commit_hash, dir_path in benchmark_dirs:
+        summary = read_execution_summary(dir_path)
+        if summary:
+            execution_summaries[commit_hash] = summary
+    
+    if execution_summaries:
+        avg_iterations = sum(s.get('testIterations', 1) for s in execution_summaries.values()) / len(execution_summaries)
+        warmup_iterations = sum(s.get('warmupIterations', 0) for s in execution_summaries.values()) / len(execution_summaries)
+        
+        table_lines.extend([
+            "---",
+            f"*AI Cost Benchmark: {avg_iterations:.0f} test iteration(s) per commit after {warmup_iterations:.0f} warmup exclusion.*"
+        ])
+    
+    return "\n".join(table_lines)
+
+
+def _update_readme_with_new_content_smart(existing_readme_path: str, commits_data: Dict[str, Dict[str, Any]], 
+                                     final_dirs: List[Tuple[str, str]]) -> bool:
+    """Update README.md by replacing existing column or adding new column."""
+    try:
+        with open(existing_readme_path, 'r', encoding='utf-8') as f:
+            readme_content = f.read()
+        
+        lines = readme_content.split('\n')
+        start_idx = None
+        end_idx = None
+        
+        for i, line in enumerate(lines):
+            if '<!-- BENCHMARK_RESULTS_START -->' in line:
+                start_idx = i
+            elif '<!-- BENCHMARK_RESULTS_END -->' in line:
+                end_idx = i
+                break
+        
+        if start_idx is None or end_idx is None:
+            print("Error: Could not find benchmark section markers in README.md")
+            return False
+        
+        # Extract existing benchmark content
+        existing_benchmark_content = '\n'.join(lines[start_idx+1:end_idx])
+        
+        # Parse existing table
+        existing_headers, existing_data = _parse_existing_table(existing_benchmark_content)
+        
+        # Get the new commit and its tag
+        new_commit = list(commits_data.keys())[-1]  # Last commit is the new one
+        new_tag = commits_data[new_commit]['_tag']
+        new_metrics = commits_data[new_commit]
+        
+        # Update table with new column (replace or add)
+        updated_headers, updated_data = _update_table_with_new_column(
+            existing_headers, existing_data, new_commit, new_tag, new_metrics
+        )
+        
+        # Build updated table content
+        updated_table_content = _build_updated_table_content(updated_headers, updated_data, final_dirs)
+        
+        # Replace benchmark section in README
+        updated_lines = (
+            lines[:start_idx+1] + 
+            [updated_table_content] + 
+            lines[end_idx:]
+        )
+        
+        with open(existing_readme_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(updated_lines))
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error updating README.md: {e}")
+        return False
+
+
 def _update_readme_with_new_content(existing_readme_path: str, new_content: str) -> bool:
     """Update README.md by replacing the benchmark section with new content."""
     try:
@@ -519,13 +721,10 @@ def main():
     sorted_commits = sorted(commits_data.keys(), key=lambda x: commits_data[x]['_tag'])
     display_names = [commits_data[commit]['_tag'] for commit in sorted_commits]
     
-    # Build markdown content
-    new_content = _build_markdown_content(commits_data, sorted_commits, display_names, final_dirs)
-    
     # Handle different output modes
     if 'README.md' in args.existing_report:
         print(f"Adding column for {args.commit} to README.md...")
-        success = _update_readme_with_new_content(args.existing_report, new_content)
+        success = _update_readme_with_new_content_smart(args.existing_report, commits_data, final_dirs)
         if success:
             print(f"Successfully added column for {args.commit} to {args.existing_report}")
         else:
@@ -534,6 +733,9 @@ def main():
     else:
         # Handle intermediate report file
         print(f"Processing intermediate report for {args.commit}...")
+        
+        # Build markdown content for intermediate file
+        new_content = _build_markdown_content(commits_data, sorted_commits, display_names, final_dirs)
         
         # Check if file already exists (extracted from README.md)
         if os.path.exists(args.existing_report):
