@@ -532,14 +532,25 @@ def main():
             print(f"Failed to update {args.existing_report}")
         return success
     else:
-        # Create intermediate report file
-        print(f"Creating intermediate report for {args.commit}...")
-        os.makedirs(os.path.dirname(args.existing_report), exist_ok=True)
+        # Handle intermediate report file
+        print(f"Processing intermediate report for {args.commit}...")
         
-        with open(args.existing_report, 'w', encoding='utf-8') as f:
-            f.write(new_content)
+        # Check if file already exists (extracted from README.md)
+        if os.path.exists(args.existing_report):
+            print(f"Intermediate file exists, updating with new column...")
+            # File exists - update it with new content
+            os.makedirs(os.path.dirname(args.existing_report), exist_ok=True)
+            with open(args.existing_report, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"Successfully updated intermediate report: {args.existing_report}")
+        else:
+            print(f"Creating new intermediate report...")
+            # File doesn't exist - create it
+            os.makedirs(os.path.dirname(args.existing_report), exist_ok=True)
+            with open(args.existing_report, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"Successfully created intermediate report: {args.existing_report}")
         
-        print(f"Successfully created intermediate report: {args.existing_report}")
         return True
 
 

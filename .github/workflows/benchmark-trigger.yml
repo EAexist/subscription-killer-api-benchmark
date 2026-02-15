@@ -144,13 +144,25 @@
               TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
               INTERMEDIATE_REPORT="results/reports/ai-benchmark_${{ env.APP_GIT_COMMIT }}_intermediate_${TIMESTAMP}.md"
               
-              # Generate intermediate report content
+              # First, extract existing README.md benchmark section as initial content
+              echo "📄 Extracting existing benchmark section from README.md..."
+              awk '
+                /<!-- BENCHMARK_RESULTS_START -->/, /<!-- BENCHMARK_RESULTS_END -->/ {
+                  if ($0 !~ /<!-- BENCHMARK_RESULTS_.*-->/) {
+                    print
+                  }
+                }
+              ' README.md > "$INTERMEDIATE_REPORT"
+              
+              echo "✅ Initial content extracted to $INTERMEDIATE_REPORT"
+              
+              # Add new column to intermediate report
               python scripts/trace_ai_benchmark_comparison.py \
                 --existing-report "$INTERMEDIATE_REPORT" \
                 --commit ${{ env.APP_GIT_COMMIT }} \
                 --dir "$BENCHMARK_DIR"
               
-              echo "✅ Intermediate report saved to $INTERMEDIATE_REPORT"
+              echo "✅ Intermediate report updated with new column"
               
               # Update README.md with the same content
               python scripts/trace_ai_benchmark_comparison.py \
