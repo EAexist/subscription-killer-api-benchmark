@@ -309,29 +309,25 @@ def generate_comparison_table(benchmark_dirs: List[Tuple[str, str]]) -> str:
     """Generate markdown comparison table from benchmark data."""
     commits_data = {}
     
-    # Get git tag from benchmark metadata for display
-    git_tag = "unknown-tag"
-    if benchmark_dirs:
-        _, first_dir_path = benchmark_dirs[0]
-        metadata = read_benchmark_metadata(first_dir_path)
-        git_tag = metadata.get('tag', 'unknown-tag')
-
     # Extract metrics for each commit
     for commit_hash, dir_path in benchmark_dirs:
         try:
             metrics = extract_commit_metrics(commit_hash, dir_path)
             if metrics:
+                # Store metadata with metrics for each commit
+                metadata = read_benchmark_metadata(dir_path)
+                metrics['_tag'] = metadata.get('tag', commit_hash[:8])  # Use tag or short commit hash
                 commits_data[commit_hash] = metrics
-                print(f"Info: Successfully extracted metrics for {commit_hash}: {len(metrics)} metrics")
+                print(f"Info: Successfully extracted metrics for {commit_hash}: {len(metrics)-1} metrics")
         except Exception as e:
             print(f"Error processing {commit_hash}: {e}")
 
     if not commits_data:
         return "No valid benchmark data found."
 
-    sorted_commits = sorted(commits_data.keys())
-    # Use git tag for display instead of commit hash
-    display_names = [git_tag] * len(sorted_commits)
+    # Sort commits by tag (alphabetical order)
+    sorted_commits = sorted(commits_data.keys(), key=lambda x: commits_data[x]['_tag'])
+    display_names = [commits_data[commit]['_tag'] for commit in sorted_commits]
     
     table_lines = []
 
@@ -351,7 +347,27 @@ def generate_comparison_table(benchmark_dirs: List[Tuple[str, str]]) -> str:
             for commit in sorted_commits:
                 value = commits_data[commit].get(metric)
                 std_dev = commits_data[commit].get('Latency Std Dev') if metric == 'Average Latency' else None
-                row_values.append(format_metric_value(metric, value, std_dev))
+                
+                # Add percentage change for AI Cost (except for first column)
+                if metric == 'AI Cost' and value is not None:
+                    # Get first column value for comparison
+                    first_commit = sorted_commits[0]
+                    first_value = commits_data[first_commit].get(metric)
+                    
+                    if commit == first_commit:
+                        # First column - no percentage
+                        row_values.append(format_metric_value(metric, value, std_dev))
+                    elif first_value is not None and first_value > 0:
+                        percentage_change = ((value - first_value) / first_value) * 100
+                        if percentage_change >= 0:
+                            formatted_value = f"{format_metric_value(metric, value, std_dev)} (+{percentage_change:.1f}%)"
+                        else:
+                            formatted_value = f"{format_metric_value(metric, value, std_dev)} ({percentage_change:.1f}%)"
+                        row_values.append(formatted_value)
+                    else:
+                        row_values.append(format_metric_value(metric, value, std_dev))
+                else:
+                    row_values.append(format_metric_value(metric, value, std_dev))
 
             # Add reference mark for AI Cost
             metric_display = f"{metric}*" if metric == 'AI Cost' else metric

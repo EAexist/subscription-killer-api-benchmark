@@ -106,8 +106,8 @@
           if: success()
           env:
             # AI Cost Benchmark configuration
-            GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_INPUT_TOKEN_PRICE }}
-            GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_OUTPUT_TOKEN_PRICE }}
+            GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
+            GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION }}
           run: |
             echo "📊 Generating AI benchmark comparison reports..."
             python scripts/trace_ai_benchmark_comparison.py
