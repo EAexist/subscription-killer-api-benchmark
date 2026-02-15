@@ -187,7 +187,6 @@
 
         - name: Display Benchmark Results
           run: |
-            
             # Extract and display benchmark section from README.md
             if [ -f "README.md" ]; then
               awk '
