@@ -101,7 +101,7 @@ public class BenchmarkTestUtils {
      * @return Map of Spring environment variables
      */
     public static Map<String, String> loadSpringEnvVars() {
-        String envFilePath = System.getenv().getOrDefault("SPRING_ENV_FILE", ".env.spring.benchmark");
+        String envFilePath = System.getenv().getOrDefault("SPRING_ENV_FILE", ".env.spring.benchmark.dev");
         return loadEnvFile(envFilePath);
     }
 
