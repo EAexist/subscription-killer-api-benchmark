@@ -37,9 +37,15 @@ def download_file_from_github(repo_owner, repo_name, release_tag, file_name, out
 def download_latest_release_data(repo_owner, repo_name, output_dir="results/reports"):
     """Download the latest benchmark data from GitHub releases."""
     try:
-        # Get latest release info
+        # Get latest release info with authentication
         api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
-        response = requests.get(api_url)
+        
+        # Use GitHub CLI token for authentication if available
+        headers = {}
+        if os.environ.get('GH_TOKEN'):
+            headers['Authorization'] = f"token {os.environ['GH_TOKEN']}"
+        
+        response = requests.get(api_url, headers=headers)
         
         if response.status_code == 404:
             print(f"📭 No releases found for {repo_owner}/{repo_name}")
