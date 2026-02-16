@@ -56,29 +56,14 @@ jobs:
           echo "supplementary_csv_path=results/reports/supplementary-metrics.csv" >> $GITHUB_OUTPUT
           echo "markdown_path=results/reports/latest-benchmark-results.md" >> $GITHUB_OUTPUT
       
-      - name: Download Benchmark Data
-        if: ${{ !inputs.skip_download }}
-        continue-on-error: true
-        run: |
-          python scripts/download_benchmark_data.py \
-            --repo-owner "EAexist" \
-            --repo-name "subscription-killer-benchmark" \
-            --output-dir "results/reports"
-      
       - name: Create Initial Release (if needed)
         if: ${{ !inputs.skip_download }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          # Check if download failed (no releases) and we have local data
-          if [ ! -f "results/reports/ai-metrics.csv" ] && [ -d "results/ai-benchmark/benchmark-test" ]; then
-            echo "📭 Download failed (no releases), creating initial release from local data..."
-            
-            # Find the latest benchmark data directory
-            LATEST_DIR=$(ls -1t results/ai-benchmark/benchmark-test/ | head -1)
-            BENCHMARK_DATA_PATH="results/ai-benchmark/benchmark-test/${LATEST_DIR}"
-            
-            echo "📁 Using benchmark data from: ${BENCHMARK_DATA_PATH}"
+          # Check if we have releases
+          if ! gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
+            echo "📭 No releases found, creating initial release from template files..."
             
             # Create initial release with template files
             gh release create benchmark-initial \
@@ -90,24 +75,21 @@ jobs:
             
             if [ $? -eq 0 ]; then
               echo "✅ Initial release 'benchmark-initial' created successfully!"
-              echo "🔄 Now downloading from the new release..."
-              
-              # Download from the newly created release
-              python scripts/download_benchmark_data.py \
-                --repo-owner "EAexist" \
-                --repo-name "subscription-killer-benchmark" \
-                --output-dir "results/reports"
             else
               echo "❌ Failed to create initial release"
               exit 1
             fi
-          elif [ -f "results/reports/ai-metrics.csv" ]; then
-            echo "✅ Download successful, skipping initial release creation"
           else
-            echo "❌ No local benchmark data found at results/ai-benchmark/benchmark-test/"
-            echo "💡 Please run main benchmark workflow first to generate data"
-            exit 1
+            echo "✅ Releases already exist, skipping initial release creation"
           fi
+      
+      - name: Download Benchmark Data
+        if: ${{ !inputs.skip_download }}
+        run: |
+          python scripts/download_benchmark_data.py \
+            --repo-owner "EAexist" \
+            --repo-name "subscription-killer-benchmark" \
+            --output-dir "results/reports"
       
       - name: Process CSV Data
         run: |
