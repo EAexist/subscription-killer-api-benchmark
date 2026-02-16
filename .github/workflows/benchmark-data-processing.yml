@@ -62,7 +62,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           # Check if ANY release exists
-          if gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
+          RELEASE_COUNT=$(gh release view --json 2>/dev/null | jq '. | length' 2>/dev/null || echo "0")
+          if [ "${RELEASE_COUNT}" -eq "0" ]; then
             echo "✅ Releases already exist, skipping initial release creation"
           else
             echo "📭 No releases found, creating initial release from template files..."
