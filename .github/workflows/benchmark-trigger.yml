@@ -102,6 +102,16 @@
             chmod +x run-ai-benchmark.sh
             ./run-ai-benchmark.sh
 
+        - name: Upload Results
+          uses: actions/upload-artifact@v4
+          if: always()
+          with:
+            name: ai-benchmark-results-${{ env.APP_GIT_COMMIT }}
+            path: |
+              results/ai-benchmark/
+              results/reports/
+            retention-days: 30
+
         - name: Add Column to Existing README Report
           if: success()
           env:
@@ -174,16 +184,6 @@
               echo "✅ README.md updated successfully"
             fi
             echo "✅ Benchmark report updated"
-
-        - name: Upload Results
-          uses: actions/upload-artifact@v4
-          if: always()
-          with:
-            name: ai-benchmark-results-${{ env.APP_GIT_COMMIT }}
-            path: |
-              results/ai-benchmark/
-              results/reports/
-            retention-days: 30
 
         - name: Display Benchmark Results
           run: |

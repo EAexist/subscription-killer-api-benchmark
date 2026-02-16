@@ -17,6 +17,7 @@
 </div>
 
 <!-- BENCHMARK_RESULTS -->
+<!-- BENCHMARK_RESULTS_START -->
 ## 📊 Latest AI Cost Benchmark
 
 ### AI Token Usage and Cost
@@ -44,7 +45,7 @@
 
 ---
 *AI Cost Benchmark: 1 test iteration(s) per commit after 1 warmup exclusion.*
-
+<!-- BENCHMARK_RESULTS_END -->
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
