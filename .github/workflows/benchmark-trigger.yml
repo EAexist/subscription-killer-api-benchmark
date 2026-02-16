@@ -176,19 +176,10 @@
 
         - name: Display Benchmark Results
           run: |
-            # Extract and display benchmark section from README.md
-            if [ -f "README.md" ]; then
-              awk '
-                /<!-- BENCHMARK_RESULTS_START -->/, /<!-- BENCHMARK_RESULTS_END -->/ {
-                  if ($0 !~ /<!-- BENCHMARK_RESULTS_.*-->/) {
-                    print
-                  }
-                }
-              ' README.md >> $GITHUB_STEP_SUMMARY
-            else
-              # Fallback to report files if README.md doesn't exist
-              cat results/reports/*.md >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No benchmark reports found" >> $GITHUB_STEP_SUMMARY
-            fi
+            # Find and display the most recent intermediate report file
+            INTERMEDIATE_REPORT=$(ls -t results/reports/ai-benchmark_${{ env.APP_GIT_COMMIT }}_intermediate_*.md | head -1)
+            echo "📊 Displaying benchmark results from intermediate report: $INTERMEDIATE_REPORT"
+            cat "$INTERMEDIATE_REPORT" >> $GITHUB_STEP_SUMMARY
 
         - name: Commit and Push README
           run: |
