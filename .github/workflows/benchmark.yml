@@ -31,6 +31,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Metadata from Image
+        id: extract-metadata
         run: |
           # Set IMAGE_NAME from payload
           IMAGE_NAME="${{ github.event.client_payload.image_name }}"
@@ -123,4 +124,4 @@ jobs:
     needs: run-benchmark
     uses: ./.github/workflows/benchmark-release.yml
     with:
-      APP_GIT_TAG: ${{ needs.run-benchmark.outputs.app_git_tag }}
+      app_git_tag: ${{ needs.run-benchmark.outputs.app_git_tag }}

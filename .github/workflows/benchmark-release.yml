@@ -3,7 +3,7 @@ name: Benchmark Data Processing
 on:
   workflow_call:
     inputs:
-      APP_GIT_TAG:
+      app_git_tag:
         description: 'Git tag for release naming'
         required: true
         type: string
@@ -81,7 +81,7 @@ jobs:
         id: find-dir
         run: |
           # Find the latest timestamp directory for the given tag
-          BENCHMARK_DIR="results/ai-benchmark/${{ inputs.APP_GIT_TAG }}"
+          BENCHMARK_DIR="results/ai-benchmark/${{ inputs.app_git_tag }}"
           LATEST_TIMESTAMP_DIR=$(find "$BENCHMARK_DIR" -maxdepth 1 -type d -name "*_*" | sort -r | head -n 1)
           
           if [ -z "$LATEST_TIMESTAMP_DIR" ]; then
@@ -96,7 +96,7 @@ jobs:
         run: |
           python scripts/benchmarkUtils.py \
             --existing-report "results/ai-benchmark" \
-            --commit "${{ inputs.APP_GIT_TAG }}" \
+            --commit "${{ inputs.app_git_tag }}" \
             --dir "${{ steps.find-dir.outputs.latest_dir }}"
       
       - name: Generate Markdown
@@ -108,7 +108,7 @@ jobs:
             --ai-csv "${{ steps.setup.outputs.ai_csv_path }}" \
             --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
             --existing-report "results/ai-benchmark" \
-            --commits "${{ inputs.APP_GIT_TAG }}" \
+            --commits "${{ inputs.app_git_tag }}" \
             --dirs "${{ steps.find-dir.outputs.latest_dir }}"
 
       - name: Display Results
@@ -125,12 +125,12 @@ jobs:
             results/reports/ai-metrics.csv
             results/reports/supplementary-metrics.csv
             results/reports/latest-benchmark-results.md
-          name: ${{ inputs.APP_GIT_TAG }}
-          tag_name: ${{ inputs.APP_GIT_TAG }}
+          name: ${{ inputs.app_git_tag }}
+          tag_name: ${{ inputs.app_git_tag }}
           body: |
             ## 📊 Benchmark Results
             
-            **Commit:** ${{ inputs.APP_GIT_TAG }}
+            **Commit:** ${{ inputs.app_git_tag }}
             **Date:** ${{ github.event.head_commit.timestamp }}
             
             This release contains the latest benchmark results including:
