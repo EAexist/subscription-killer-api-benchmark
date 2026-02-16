@@ -95,7 +95,6 @@ jobs:
     uses: ./.github/workflows/benchmark-data-processing.yml
     with:
       commit_hash: ${{ needs.run-benchmark.outputs.commit_hash }}
-      benchmark_dir: ${{ needs.run-benchmark.outputs.benchmark_dir }}
       skip_download: false
 
   create-release:

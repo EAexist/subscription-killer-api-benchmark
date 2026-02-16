@@ -7,10 +7,6 @@ on:
         description: 'Commit hash to process'
         required: true
         type: string
-      benchmark_dir:
-        description: 'Benchmark directory path'
-        required: false
-        type: string
       skip_download:
         description: 'Skip downloading data (default: false)'
         required: false
@@ -73,7 +69,7 @@ jobs:
           python scripts/benchmarkUtils.py \
             --existing-report "results/ai-benchmark" \
             --commit "${{ inputs.commit_hash }}" \
-            --dir "${{ inputs.benchmark_dir || 'results/ai-benchmark/default' }}"
+            --dir "results/ai-benchmark/default"
       
       - name: Generate Markdown
         run: |
@@ -82,7 +78,7 @@ jobs:
             --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
             --existing-report "results/ai-benchmark" \
             --commits "${{ inputs.commit_hash }}" \
-            --dirs "${{ inputs.benchmark_dir || 'results/ai-benchmark/default' }}"
+            --dirs "results/ai-benchmark/default"
       
       - name: Update README.md
         run: |
