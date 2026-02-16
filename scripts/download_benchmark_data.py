@@ -62,8 +62,7 @@ def download_latest_release_data(repo_owner, repo_name, output_dir="results/repo
         # Files to download
         files_to_download = [
             'ai-metrics.csv',
-            'supplementary-metrics.csv', 
-            '.md'
+            'supplementary-metrics.csv',
         ]
         
         success_count = 0
