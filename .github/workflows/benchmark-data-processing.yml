@@ -61,21 +61,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
+          # Get default branch name
+          DEFAULT_BRANCH=$(git remote show origin | sed -n '1p' | awk '{print $NF}' | sed 's/refs\/heads\///')
+          
           # Check if ANY release exists
           if ! gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
             echo "📭 No releases found, creating initial release from template files..."
             
             # Create initial release with template files only
-            gh release create benchmark-initial \
+            TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+            gh release create "benchmark-initial-${TIMESTAMP}" \
               --title "Initial Benchmark Data" \
               --notes "Initial benchmark data created from local test runs" \
-              --target main \
+              --target "${DEFAULT_BRANCH}" \
               --latest \
               results/templates/ai-metrics.csv \
               results/templates/supplementary-metrics.csv
             
             if [ $? -eq 0 ]; then
-              echo "✅ Initial release 'benchmark-initial' created successfully!"
+              echo "✅ Initial release 'benchmark-initial-${TIMESTAMP}' created successfully!"
             else
               echo "❌ Failed to create initial release"
               exit 1
