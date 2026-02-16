@@ -474,7 +474,7 @@ def _parse_existing_table(existing_content: str) -> Tuple[List[str], Dict[str, D
     # Find header row
     header_row = None
     for line in lines:
-        if line.startswith('| Metric |') and 'AI Cost' in line:
+        if line.startswith('| Metric |') and line.count('|') >= 2:
             header_row = line
             break
     
@@ -482,16 +482,17 @@ def _parse_existing_table(existing_content: str) -> Tuple[List[str], Dict[str, D
         return [], {}
     
     # Extract column headers (git tags)
-    headers = [h.strip() for h in header_row.split('|')[1:-1]]  # Remove first and last empty elements
+    headers = [h.strip() for h in header_row.split('|')[2:-1]]  # Skip first "Metric" column
     
     # Parse data rows
     table_data = {}
     for line in lines:
         if line.startswith('| ') and ' | ' in line:
             parts = [p.strip() for p in line.split('|')[1:-1]]  # Remove first and last empty elements
-            if len(parts) == len(headers) + 1:  # +1 for metric name
+            if len(parts) >= 2:  # At least metric name + one column
                 metric_name = parts[0]
-                table_data[metric_name] = {headers[i]: parts[i+1] for i in range(len(headers))}
+                column_values = parts[1:]  # Skip metric name
+                table_data[metric_name] = {headers[i]: column_values[i] for i in range(min(len(headers), len(column_values)))}
     
     return headers, table_data
 
