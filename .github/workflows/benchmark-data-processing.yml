@@ -62,7 +62,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           # Check if ANY release exists
-          if ! gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
+          if gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
+            echo "✅ Releases already exist, skipping initial release creation"
+          else
             echo "📭 No releases found, creating initial release from template files..."
             
             # Create initial release with template files only
@@ -80,8 +82,6 @@ jobs:
               echo "❌ Failed to create initial release"
               exit 1
             fi
-          else
-            echo "✅ Releases already exist, skipping initial release creation"
           fi
       
       - name: Download Benchmark Data
