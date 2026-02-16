@@ -82,7 +82,7 @@ jobs:
           python scripts/benchmarkUtils.py \
             --existing-report "results/ai-benchmark" \
             --commit "${{ inputs.APP_GIT_TAG }}" \
-            --dir "results/ai-benchmark/default"
+            --dir "results/ai-benchmark/${{ inputs.APP_GIT_TAG }}"
       
       - name: Generate Markdown
         env:
@@ -94,7 +94,7 @@ jobs:
             --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
             --existing-report "results/ai-benchmark" \
             --commits "${{ inputs.APP_GIT_TAG }}" \
-            --dirs "results/ai-benchmark/default"
+            --dirs "results/ai-benchmark/${{ inputs.APP_GIT_TAG }}"
 
       - name: Display Results
         run: |
