@@ -88,7 +88,7 @@ if [ ! -f "results/reports/ai-metrics.csv" ] || [ ! -f "results/reports/suppleme
     # Download latest benchmark data
     python scripts/download_benchmark_data.py \
         --repo-owner "EAexist" \
-        --repo-name "subscription-killer-benchmark" \
+        --repo-name "subscription-killer-api-benchmark" \
         --output-dir "results/reports"
     
     if [ $? -eq 0 ]; then
