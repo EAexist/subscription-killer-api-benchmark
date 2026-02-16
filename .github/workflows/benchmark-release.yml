@@ -3,15 +3,10 @@ name: Benchmark Data Processing
 on:
   workflow_call:
     inputs:
-      commit_hash:
-        description: 'Commit hash to process'
+      APP_GIT_TAG:
+        description: 'Git tag for release naming'
         required: true
         type: string
-      skip_download:
-        description: 'Skip downloading data (default: false)'
-        required: false
-        type: boolean
-        default: false
     outputs:
       ai_csv_path:
         description: 'Path to AI metrics CSV'
@@ -57,7 +52,6 @@ jobs:
           echo "markdown_path=results/reports/latest-benchmark-results.md" >> $GITHUB_OUTPUT
       
       - name: Create Initial Setup (if needed)
-        if: ${{ !inputs.skip_download }}
         run: |
           # Check if any release exists by counting lines of output from 'list'
           RELEASE_EXISTS=$(gh release list --limit 1 | wc -l)
@@ -87,7 +81,7 @@ jobs:
         run: |
           python scripts/benchmarkUtils.py \
             --existing-report "results/ai-benchmark" \
-            --commit "${{ inputs.commit_hash }}" \
+            --commit "${{ inputs.APP_GIT_TAG }}" \
             --dir "results/ai-benchmark/default"
       
       - name: Generate Markdown
@@ -99,7 +93,7 @@ jobs:
             --ai-csv "${{ steps.setup.outputs.ai_csv_path }}" \
             --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
             --existing-report "results/ai-benchmark" \
-            --commits "${{ inputs.commit_hash }}" \
+            --commits "${{ inputs.APP_GIT_TAG }}" \
             --dirs "results/ai-benchmark/default"
 
       - name: Display Results
@@ -116,12 +110,12 @@ jobs:
             results/reports/ai-metrics.csv
             results/reports/supplementary-metrics.csv
             results/reports/latest-benchmark-results.md
-          name: Benchmark Results - ${{ inputs.commit_hash }}
-          tag_name: benchmark-${{ inputs.commit_hash }}
+          name: Benchmark Results - ${{ inputs.APP_GIT_TAG }}
+          tag_name: benchmark-${{ inputs.APP_GIT_TAG }}
           body: |
             ## 📊 Benchmark Results
             
-            **Commit:** ${{ inputs.commit_hash }}
+            **Commit:** ${{ inputs.APP_GIT_TAG }}
             **Date:** ${{ github.event.head_commit.timestamp }}
             
             This release contains the latest benchmark results including:

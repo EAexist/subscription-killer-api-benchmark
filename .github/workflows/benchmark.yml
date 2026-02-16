@@ -109,7 +109,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ai-benchmark-results-${{ env.APP_GIT_COMMIT }}
+          name: ai-benchmark-results-${{ env.APP_GIT_TAG }}
           path: |
             results/ai-benchmark/
             results/reports/
@@ -119,5 +119,4 @@ jobs:
     needs: run-benchmark
     uses: ./.github/workflows/benchmark-release.yml
     with:
-      commit_hash: ${{ needs.run-benchmark.outputs.commit_hash }}
-      skip_download: false
+      APP_GIT_TAG: ${{ env.APP_GIT_TAG }}
