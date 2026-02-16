@@ -56,43 +56,32 @@ jobs:
           echo "supplementary_csv_path=results/reports/supplementary-metrics.csv" >> $GITHUB_OUTPUT
           echo "markdown_path=results/reports/latest-benchmark-results.md" >> $GITHUB_OUTPUT
       
-      - name: Create Initial Release (if needed)
+      - name: Create Initial Setup (if needed)
         if: ${{ !inputs.skip_download }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           # Check if any release exists by counting lines of output from 'list'
           RELEASE_EXISTS=$(gh release list --limit 1 | wc -l)
 
           if [ "$RELEASE_EXISTS" -gt 0 ]; then
-            echo "✅ Releases already exist, skipping initial release creation"
+            echo "✅ Releases already exist, downloading them"
+            
+            # Download existing releases
+            python scripts/download_benchmark_data.py \
+              --repo-owner "EAexist" \
+              --repo-name "subscription-killer-api-benchmark" \
+              --output-dir "results/reports"
           else
-            echo "📭 No releases found, creating initial release from template files..."
+            echo "📭 No releases found, creating results/reports from template files..."
             
-            # Create initial release with template files only
-            gh release create "benchmark-${GIT_TAG:-initial}" \
-              --title "Initial Benchmark Data" \
-              --notes "Initial benchmark data created from local test runs" \
-              --target "${GITHUB_REF_NAME}" \
-              --latest \
-              results/templates/ai-metrics.csv \
-              results/templates/supplementary-metrics.csv
+            # Create results/reports directory
+            mkdir -p results/reports
             
-            if [ $? -eq 0 ]; then
-              echo "✅ Initial release 'benchmark-${GIT_TAG:-initial}' created successfully!"
-            else
-              echo "❌ Failed to create initial release"
-              exit 1
-            fi
+            # Copy template files to results/reports
+            cp results/templates/ai-metrics.csv results/reports/
+            cp results/templates/supplementary-metrics.csv results/reports/
+            
+            echo "✅ Created results/reports directory with template files"
           fi
-      
-      - name: Download Benchmark Data
-        if: ${{ !inputs.skip_download }}
-        run: |
-          python scripts/download_benchmark_data.py \
-            --repo-owner "EAexist" \
-            --repo-name "subscription-killer-api-benchmark" \
-            --output-dir "results/reports"
       
       - name: Process CSV Data
         run: |
@@ -102,6 +91,9 @@ jobs:
             --dir "results/ai-benchmark/default"
       
       - name: Generate Markdown
+        env:
+          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_INPUT_TOKEN_PRICE }}
+          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_OUTPUT_TOKEN_PRICE }}
         run: |
           python scripts/markdownUtils.py \
             --ai-csv "${{ steps.setup.outputs.ai_csv_path }}" \
@@ -109,6 +101,43 @@ jobs:
             --existing-report "results/ai-benchmark" \
             --commits "${{ inputs.commit_hash }}" \
             --dirs "results/ai-benchmark/default"
+
+      - name: Display Results
+        run: |
+          echo "📊 Displaying benchmark results..."
+          echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
+          cat "${{ steps.setup.outputs.markdown_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Create GitHub Release with Benchmark Data
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            results/reports/ai-metrics.csv
+            results/reports/supplementary-metrics.csv
+            results/reports/latest-benchmark-results.md
+          name: Benchmark Results - ${{ inputs.commit_hash }}
+          tag_name: benchmark-${{ inputs.commit_hash }}
+          body: |
+            ## 📊 Benchmark Results
+            
+            **Commit:** ${{ inputs.commit_hash }}
+            **Date:** ${{ github.event.head_commit.timestamp }}
+            
+            This release contains the latest benchmark results including:
+            - AI Cost metrics (CSV)
+            - Supplementary performance indicators (CSV) 
+            - Formatted markdown report (MD)
+            
+            ### 📁 Files Included
+            - `ai-metrics.csv` - AI token usage and cost data
+            - `supplementary-metrics.csv` - Performance indicators data
+            - `latest-benchmark-results.md` - Formatted markdown report
+            
+            ---
+            *Generated automatically by GitHub Actions benchmark workflow*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Update README.md
         run: |
@@ -150,10 +179,3 @@ jobs:
           awk -f replace_benchmark.awk README.md > README.tmp && mv README.tmp README.md
           
           echo "✅ README.md updated successfully"
-      
-      - name: Display Results
-        run: |
-          echo "📊 Displaying benchmark results..."
-          echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
-          cat "${{ steps.setup.outputs.markdown_path }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

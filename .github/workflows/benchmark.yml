@@ -31,7 +31,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Metadata from Image
-        id: extract-metadata
         run: |
           # Set IMAGE_NAME from payload
           IMAGE_NAME="${{ github.event.client_payload.image_name }}"
@@ -52,84 +51,73 @@ jobs:
           
           # Extract labels
           RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE_NAME")
-          COMMIT_HASH=${RAW_COMMIT:0:7}
+          RAW_TAG=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.ref.name"}}' "$IMAGE_NAME")
           
-          # Create benchmark directory
-          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-          BENCHMARK_DIR="results/ai-benchmark/${COMMIT_HASH}/${TIMESTAMP}"
-          mkdir -p "$BENCHMARK_DIR"
+          # Validation: Fail the build if COMMIT is empty
+          if [ -z "$RAW_COMMIT" ] || [ "$RAW_COMMIT" == "<no value>" ]; then
+          echo "ERROR: OCI Revision (commit) missing in image metadata. Ensure Gradle build passes -PGIT_COMMIT."
+          exit 1
+          fi
           
-          # Set outputs for downstream jobs
-          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
-          echo "benchmark_dir=${BENCHMARK_DIR}" >> $GITHUB_OUTPUT
+          # Validation: Fail the build if TAG is empty
+          if [ -z "$RAW_TAG" ] || [ "$RAW_TAG" == "<no value>" ]; then
+          echo "ERROR: OCI Ref Name (tag) missing in image metadata. Ensure Gradle build passes -PGIT_TAG."
+          exit 1
+          fi
           
-          # Set environment variables
-          echo "APP_GIT_COMMIT=${COMMIT_HASH}" >> $GITHUB_ENV
-          echo "BENCHMARK_DIR=${BENCHMARK_DIR}" >> $GITHUB_ENV
+          echo "APP_GIT_COMMIT=$RAW_COMMIT" >> $GITHUB_ENV
+          echo "APP_GIT_TAG=$RAW_TAG" >> $GITHUB_ENV
 
-      - name: Run Benchmark Tests
+      - name: Write Spring environment file
         run: |
-          echo "🚀 Starting benchmark execution..."
-          echo "Commit: ${{ env.APP_GIT_COMMIT }}"
-          echo "Directory: ${{ env.BENCHMARK_DIR }}"
+          # Combine main spring environment and google account samples
+          echo '${{ secrets.SPRING_ENV_FILE_CONTENT }}' > .env.spring.benchmark.part1
+          echo '${{ secrets.GOOGLE_ACCOUNT_SAMPLES }}' > .env.spring.benchmark.part2
           
-          # Run benchmark tests against the Docker image
-          docker run --rm \
-            -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
-            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-            -v "${{ env.BENCHMARK_DIR }}:/app/results" \
-            "${{ env.IMAGE_NAME }}" \
-            bash -c "
-              cd /app
-              ./run-benchmark.sh
-            "
+          # Combine both parts into final file
+          cat .env.spring.benchmark.part1 .env.spring.benchmark.part2 > .env.spring.benchmark
+          
+          # Clean up temporary files
+          rm .env.spring.benchmark.part1 .env.spring.benchmark.part2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Run Benchmark
+        env:
+          # Only benchmark-specific variables
+          APP_GIT_COMMIT: ${{ env.APP_GIT_COMMIT }}
+          APP_GIT_TAG: ${{ env.APP_GIT_TAG }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+
+          # AI Cost Benchmark configuration
+          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_INPUT_TOKEN_PRICE }}
+          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_OUTPUT_TOKEN_PRICE }}
+          AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS: ${{ vars.AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS }}
+          AI_BENCHMARK_ENDPOINT: ${{ vars.AI_BENCHMARK_ENDPOINT }}
+          AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
+          AI_BENCHMARK_K6_WARMUP_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_WARMUP_ITERATIONS }}
+          AI_BENCHMARK_REQUEST_TIMEOUT: ${{ vars.AI_BENCHMARK_REQUEST_TIMEOUT }}
+        run: |
+          chmod +x run-ai-benchmark.sh
+          ./run-ai-benchmark.sh
 
       - name: Upload Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: benchmark-results-${{ env.APP_GIT_COMMIT }}
-          path: ${{ env.BENCHMARK_DIR }}
+          name: ai-benchmark-results-${{ env.APP_GIT_COMMIT }}
+          path: |
+            results/ai-benchmark/
+            results/reports/
+          retention-days: 30
 
   process-benchmark-data:
     needs: run-benchmark
-    uses: ./.github/workflows/benchmark-data-processing.yml
+    uses: ./.github/workflows/benchmark-release.yml
     with:
       commit_hash: ${{ needs.run-benchmark.outputs.commit_hash }}
       skip_download: false
-
-  create-release:
-    needs: process-benchmark-data
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-      - name: Create GitHub Release with Benchmark Data
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            results/reports/ai-metrics.csv
-            results/reports/supplementary-metrics.csv
-            results/reports/latest-benchmark-results.md
-          name: Benchmark Results - ${{ needs.run-benchmark.outputs.commit_hash }}
-          tag_name: benchmark-${{ needs.run-benchmark.outputs.commit_hash }}
-          body: |
-            ## 📊 Benchmark Results
-            
-            **Commit:** ${{ needs.run-benchmark.outputs.commit_hash }}
-            **Date:** ${{ github.event.head_commit.timestamp }}
-            
-            This release contains the latest benchmark results including:
-            - AI Cost metrics (CSV)
-            - Supplementary performance indicators (CSV) 
-            - Formatted markdown report (MD)
-            
-            ### 📁 Files Included
-            - `ai-metrics.csv` - AI token usage and cost data
-            - `supplementary-metrics.csv` - Performance indicators data
-            - `latest-benchmark-results.md` - Formatted markdown report
-            
-            ---
-            *Generated automatically by GitHub Actions benchmark workflow*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

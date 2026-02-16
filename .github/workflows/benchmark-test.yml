@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-benchmark-data:
-    uses: ./.github/workflows/benchmark-data-processing.yml
+    uses: ./.github/workflows/benchmark-release.yml
     with:
       commit_hash: ${{ github.event.inputs.commit_hash }}
       skip_download: false
