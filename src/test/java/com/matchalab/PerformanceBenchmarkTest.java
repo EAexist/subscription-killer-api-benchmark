@@ -285,10 +285,10 @@ public class PerformanceBenchmarkTest {
      * Creates benchmark directory structure.
      */
     private Path createBenchmarkDirectory() throws java.io.IOException {
-        String gitCommitHash = System.getenv().getOrDefault("APP_GIT_COMMIT", "unknown");
+        String gitTag = System.getenv().getOrDefault("APP_GIT_TAG", "unknown");
         String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         
-        Path baseDir = java.nio.file.Paths.get("results", "ai-benchmark", gitCommitHash, timestamp);
+        Path baseDir = java.nio.file.Paths.get("results", "ai-benchmark", gitTag, timestamp);
         java.nio.file.Files.createDirectories(baseDir);
         
         java.nio.file.Files.createDirectories(baseDir.resolve("data"));
