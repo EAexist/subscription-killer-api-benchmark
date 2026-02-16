@@ -515,6 +515,20 @@ def _update_table_with_new_column(existing_headers: List[str], existing_data: Di
     for metric_name, value in new_metrics.items():
         if metric_name == '_tag':
             continue
+        
+        # Extract actual value from dictionary if needed
+        actual_value = value
+        if isinstance(value, dict):
+            if 'average' in value:
+                actual_value = value['average']
+            elif 'value' in value:
+                actual_value = value['value']
+            else:
+                # For other dict structures, try to get the first numeric value
+                for key, val in value.items():
+                    if isinstance(val, (int, float)):
+                        actual_value = val
+                        break
             
         if metric_name not in existing_data:
             existing_data[metric_name] = {}
@@ -528,26 +542,26 @@ def _update_table_with_new_column(existing_headers: List[str], existing_data: Di
                 try:
                     # Extract numeric value from first column
                     first_value = float(first_value_str.split('$')[1].split()[0]) if first_value_str and '$' in first_value_str else 0
-                    current_value = float(value) if value is not None else 0
+                    current_value = float(actual_value) if actual_value is not None else 0
                     
                     if col_index == 0:  # First column, no percentage
-                        formatted_value = format_metric_value(metric_name, value)
+                        formatted_value = format_metric_value(metric_name, actual_value)
                     elif first_value > 0:
                         percentage_change = ((current_value - first_value) / first_value) * 100
-                        base_formatted = format_metric_value(metric_name, value)
+                        base_formatted = format_metric_value(metric_name, actual_value)
                         if percentage_change >= 0:
                             formatted_value = f"{base_formatted} (+{percentage_change:.1f}%)"
                         else:
                             formatted_value = f"{base_formatted} ({percentage_change:.1f}%)"
                     else:
-                        formatted_value = format_metric_value(metric_name, value)
+                        formatted_value = format_metric_value(metric_name, actual_value)
                 except:
-                    formatted_value = format_metric_value(metric_name, value)
+                    formatted_value = format_metric_value(metric_name, actual_value)
             else:
-                formatted_value = format_metric_value(metric_name, value)
+                formatted_value = format_metric_value(metric_name, actual_value)
         else:
-            std_dev = new_metrics.get('Latency Std Dev') if 'Latency' in metric_name else None
-            formatted_value = format_metric_value(metric_name, value, std_dev)
+            std_dev = value.get('std_dev') if isinstance(value, dict) and 'std_dev' in value else None
+            formatted_value = format_metric_value(metric_name, actual_value, std_dev)
         
         existing_data[metric_name][new_tag] = formatted_value
     
