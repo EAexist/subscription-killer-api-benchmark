@@ -80,12 +80,13 @@ jobs:
             
             echo "📁 Using benchmark data from: ${BENCHMARK_DATA_PATH}"
             
-            # Create initial release
+            # Create initial release with template files
             gh release create benchmark-initial \
               --title "Initial Benchmark Data" \
               --notes "Initial benchmark data created from local test runs" \
               --target main \
-              "${BENCHMARK_DATA_PATH}"
+              results/templates/ai-metrics.csv \
+              results/templates/supplementary-metrics.csv
             
             if [ $? -eq 0 ]; then
               echo "✅ Initial release 'benchmark-initial' created successfully!"

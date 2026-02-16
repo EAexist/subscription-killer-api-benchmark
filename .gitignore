@@ -35,4 +35,4 @@ Thumbs.db
 # Benchmark Results (ignore contents, keep directories)
 results/ai-benchmark/*
 !results/ai-benchmark/benchmark-test
-!results/ai-benchmark/.gitkeep
+results/reports
