@@ -64,6 +64,53 @@ jobs:
             --repo-name "subscription-killer-benchmark" \
             --output-dir "results/reports"
       
+      - name: Create Initial Release (if needed)
+        if: ${{ !inputs.skip_download }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Check if we have benchmark data but no releases exist
+          if [ -d "results/ai-benchmark/benchmark-test" ]; then
+            echo "🔄 Checking for existing releases..."
+            
+            # Try to get latest release
+            if ! gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
+              echo "✅ Releases already exist, skipping initial release creation"
+            else
+              echo "📭 No releases found, creating initial release from local data..."
+              
+              # Find the latest benchmark data directory
+              LATEST_DIR=$(ls -1t results/ai-benchmark/benchmark-test/ | head -1)
+              BENCHMARK_DATA_PATH="results/ai-benchmark/benchmark-test/${LATEST_DIR}"
+              
+              echo "📁 Using benchmark data from: ${BENCHMARK_DATA_PATH}"
+              
+              # Create initial release
+              gh release create benchmark-initial \
+                --title "Initial Benchmark Data" \
+                --notes "Initial benchmark data created from local test runs" \
+                --target main \
+                "${BENCHMARK_DATA_PATH}"
+              
+              if [ $? -eq 0 ]; then
+                echo "✅ Initial release 'benchmark-initial' created successfully!"
+                echo "🔄 Now downloading from the new release..."
+                
+                # Download from the newly created release
+                python scripts/download_benchmark_data.py \
+                  --repo-owner "EAexist" \
+                  --repo-name "subscription-killer-benchmark" \
+                  --output-dir "results/reports"
+              else
+                echo "❌ Failed to create initial release"
+                exit 1
+              fi
+          else
+            echo "❌ No local benchmark data found at results/ai-benchmark/benchmark-test/"
+            echo "💡 Please run main benchmark workflow first to generate data"
+            exit 1
+          fi
+      
       - name: Process CSV Data
         run: |
           python scripts/benchmarkUtils.py \
