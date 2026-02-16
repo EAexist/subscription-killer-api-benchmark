@@ -3,8 +3,8 @@ name: Benchmark Test (No Execution)
 on:
   workflow_dispatch:
     inputs:
-      commit_hash:
-        description: 'Commit hash to test with'
+      APP_GIT_TAG:
+        description: 'Git tag for release naming'
         required: true
         type: string
 
@@ -12,5 +12,4 @@ jobs:
   test-benchmark-data:
     uses: ./.github/workflows/benchmark-release.yml
     with:
-      commit_hash: ${{ github.event.inputs.commit_hash }}
-      skip_download: false
+      APP_GIT_TAG: ${{ github.event.inputs.APP_GIT_TAG }}
