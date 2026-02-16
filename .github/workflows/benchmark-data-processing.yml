@@ -69,8 +69,7 @@ jobs:
             echo "📭 No releases found, creating initial release from template files..."
             
             # Create initial release with template files only
-            TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-            gh release create "benchmark-initial-${TIMESTAMP}" \
+            gh release create "benchmark-${GIT_TAG:-initial}" \
               --title "Initial Benchmark Data" \
               --notes "Initial benchmark data created from local test runs" \
               --target "${DEFAULT_BRANCH}" \
@@ -79,7 +78,7 @@ jobs:
               results/templates/supplementary-metrics.csv
             
             if [ $? -eq 0 ]; then
-              echo "✅ Initial release 'benchmark-initial-${TIMESTAMP}' created successfully!"
+              echo "✅ Initial release 'benchmark-${GIT_TAG:-initial}' created successfully!"
             else
               echo "❌ Failed to create initial release"
               exit 1
