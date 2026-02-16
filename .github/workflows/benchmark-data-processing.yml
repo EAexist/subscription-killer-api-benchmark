@@ -61,15 +61,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          # Check if we have releases
+          # Check if ANY release exists
           if ! gh release view --json 2>/dev/null | jq -e '.[].tag_name' | grep -q .; then
             echo "📭 No releases found, creating initial release from template files..."
             
-            # Create initial release with template files
+            # Create initial release with template files only
             gh release create benchmark-initial \
               --title "Initial Benchmark Data" \
               --notes "Initial benchmark data created from local test runs" \
               --target main \
+              --latest \
               results/templates/ai-metrics.csv \
               results/templates/supplementary-metrics.csv
             
