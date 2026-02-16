@@ -11,8 +11,8 @@ jobs:
       contents: write
       packages: read
     outputs:
-      commit_hash: ${{ steps.extract-metadata.outputs.commit_hash }}
       benchmark_dir: ${{ steps.extract-metadata.outputs.benchmark_dir }}
+      app_git_tag: ${{ steps.extract-metadata.outputs.app_git_tag }}
 
     steps:
       - name: Checkout code
@@ -67,6 +67,10 @@ jobs:
           
           echo "APP_GIT_COMMIT=$RAW_COMMIT" >> $GITHUB_ENV
           echo "APP_GIT_TAG=$RAW_TAG" >> $GITHUB_ENV
+          
+          # Set outputs for other jobs
+          echo "benchmark_dir=$RAW_TAG" >> $GITHUB_OUTPUT
+          echo "app_git_tag=$RAW_TAG" >> $GITHUB_OUTPUT
 
       - name: Write Spring environment file
         run: |
@@ -119,4 +123,4 @@ jobs:
     needs: run-benchmark
     uses: ./.github/workflows/benchmark-release.yml
     with:
-      APP_GIT_TAG: ${{ env.APP_GIT_TAG }}
+      APP_GIT_TAG: ${{ needs.run-benchmark.outputs.app_git_tag }}
