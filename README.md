@@ -42,6 +42,8 @@
 ---
 *AI Cost Benchmark: 1 test iteration(s) per commit after 1 warmup exclusion.*
 
+<!-- BENCHMARK_RESULTS_END -->
+
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
