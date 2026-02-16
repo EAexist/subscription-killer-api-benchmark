@@ -61,7 +61,7 @@ jobs:
         run: |
           python scripts/download_benchmark_data.py \
             --repo-owner "EAexist" \
-            --repo-name "subscription-killer-api" \
+            --repo-name "subscription-killer-benchmark" \
             --output-dir "results/reports"
       
       - name: Process CSV Data

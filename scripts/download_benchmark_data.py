@@ -77,7 +77,7 @@ def main():
     """Main function."""
     parser = argparse.ArgumentParser(description='Download benchmark data from GitHub releases')
     parser.add_argument('--repo-owner', default='EAexist', help='GitHub repository owner (default: EAexist)')
-    parser.add_argument('--repo-name', default='subscription-killer-api', help='GitHub repository name (default: subscription-killer-api)')
+    parser.add_argument('--repo-name', default='subscription-killer-benchmark', help='GitHub repository name (default: subscription-killer-benchmark)')
     parser.add_argument('--release-tag', help='Specific release tag to download (default: latest)')
     parser.add_argument('--output-dir', default='results/reports', help='Output directory (default: results/reports)')
     
