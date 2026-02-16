@@ -497,74 +497,76 @@ def _parse_existing_table(existing_content: str) -> Tuple[List[str], Dict[str, D
     return headers, table_data
 
 
+def _extract_metric_value(value: Any) -> Optional[float]:
+    """Extract numeric value from metric data."""
+    if isinstance(value, dict):
+        return value.get('average') or value.get('value') or next(
+            (v for v in value.values() if isinstance(v, (int, float))), None
+        )
+    return float(value) if value is not None else None
+
+
+def _format_ai_cost_value(actual_value: Optional[float], first_value: float, col_index: int) -> str:
+    """Format AI Cost value with percentage change if not first column."""
+    if col_index == 0:
+        return format_metric_value('AI Cost', actual_value)
+    
+    if first_value > 0 and actual_value is not None:
+        # Convert to same unit (per 1K requests) for percentage calculation
+        current_value_per_1k = actual_value * 1000
+        percentage_change = ((current_value_per_1k - first_value) / first_value) * 100
+        base_formatted = format_metric_value('AI Cost', actual_value)
+        sign = '+' if percentage_change >= 0 else ''
+        return f"{base_formatted} ({sign}{percentage_change:.1f}%)"
+    
+    return format_metric_value('AI Cost', actual_value)
+
+
 def _update_table_with_new_column(existing_headers: List[str], existing_data: Dict[str, Dict[str, str]], 
                               new_commit: str, new_tag: str, new_metrics: Dict[str, Any]) -> Tuple[List[str], Dict[str, Dict[str, str]]]:
     """Update table by replacing existing column or adding new column."""
     
-    # Check if tag already exists
+    # Determine column operation
+    col_index = existing_headers.index(new_tag) if new_tag in existing_headers else len(existing_headers)
     if new_tag in existing_headers:
-        # Replace existing column
-        col_index = existing_headers.index(new_tag)
         print(f"Replacing existing column for tag: {new_tag}")
     else:
-        # Add new column
-        col_index = len(existing_headers)
         existing_headers.append(new_tag)
         print(f"Adding new column for tag: {new_tag}")
     
-    # Update data with new metrics
+    # Update metrics
     for metric_name, value in new_metrics.items():
         if metric_name == '_tag':
             continue
         
-        # Extract actual value from dictionary if needed
-        actual_value = value
-        if isinstance(value, dict):
-            if 'average' in value:
-                actual_value = value['average']
-            elif 'value' in value:
-                actual_value = value['value']
-            else:
-                # For other dict structures, try to get the first numeric value
-                for key, val in value.items():
-                    if isinstance(val, (int, float)):
-                        actual_value = val
-                        break
-            
+        # Ensure metric entry exists
         if metric_name not in existing_data:
             existing_data[metric_name] = {}
         
-        # Format the value
+        # Extract and format value
+        actual_value = _extract_metric_value(value)
+        
         if metric_name == 'AI Cost':
-            # Calculate percentage change relative to first column
-            if len(existing_headers) > 1:
-                first_tag = existing_headers[0]
-                first_value_str = existing_data.get(metric_name, {}).get(first_tag, '')
-                try:
-                    # Extract numeric value from first column
-                    first_value = float(first_value_str.split('$')[1].split()[0]) if first_value_str and '$' in first_value_str else 0
-                    current_value = float(actual_value) if actual_value is not None else 0
-                    
-                    if col_index == 0:  # First column, no percentage
-                        formatted_value = format_metric_value(metric_name, actual_value)
-                    elif first_value > 0:
-                        percentage_change = ((current_value - first_value) / first_value) * 100
-                        base_formatted = format_metric_value(metric_name, actual_value)
-                        if percentage_change >= 0:
-                            formatted_value = f"{base_formatted} (+{percentage_change:.1f}%)"
-                        else:
-                            formatted_value = f"{base_formatted} ({percentage_change:.1f}%)"
-                    else:
-                        formatted_value = format_metric_value(metric_name, actual_value)
-                except:
-                    formatted_value = format_metric_value(metric_name, actual_value)
+            # Handle AI Cost with percentage calculations
+            existing_cost_key = 'AI Cost*' if 'AI Cost*' in existing_data else 'AI Cost'
+            first_tag = existing_headers[0] if existing_headers else None
+            
+            if first_tag and first_tag in existing_data.get(existing_cost_key, {}):
+                first_value_str = existing_data[existing_cost_key][first_tag]
+                first_value = float(first_value_str.split('$')[1].split()[0]) if '$' in first_value_str else 0
+                formatted_value = _format_ai_cost_value(actual_value, first_value, col_index)
             else:
                 formatted_value = format_metric_value(metric_name, actual_value)
+            
+            storage_key = existing_cost_key
         else:
-            std_dev = value.get('std_dev') if isinstance(value, dict) and 'std_dev' in value else None
+            # Handle other metrics
+            std_dev = value.get('std_dev') if isinstance(value, dict) else None
             formatted_value = format_metric_value(metric_name, actual_value, std_dev)
+            storage_key = metric_name
         
-        existing_data[metric_name][new_tag] = formatted_value
+        # Store formatted value
+        existing_data[storage_key][new_tag] = formatted_value
     
     return existing_headers, existing_data
 
@@ -584,9 +586,10 @@ def _build_updated_table_content(headers: List[str], table_data: Dict[str, Dict[
     
     # AI metrics
     for metric in AI_METRICS:
-        if metric in table_data:
+        metric_key = 'AI Cost*' if metric == 'AI Cost' and 'AI Cost*' in table_data else metric
+        if metric_key in table_data:
             metric_display = f"{metric}*" if metric == 'AI Cost' else metric
-            row_values = [table_data[metric].get(header, '') for header in headers]
+            row_values = [table_data[metric_key].get(header, '') for header in headers]
             table_lines.append(f"| {metric_display} | {' | '.join(row_values)} |")
     
     table_lines.extend([
@@ -613,7 +616,7 @@ def _build_updated_table_content(headers: List[str], table_data: Dict[str, Dict[
         summary = read_execution_summary(dir_path)
         if summary:
             execution_summaries[commit_hash] = summary
-    
+
     if execution_summaries:
         avg_iterations = sum(s.get('testIterations', 1) for s in execution_summaries.values()) / len(execution_summaries)
         warmup_iterations = sum(s.get('warmupIterations', 0) for s in execution_summaries.values()) / len(execution_summaries)

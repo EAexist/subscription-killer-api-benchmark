@@ -121,69 +121,58 @@
           run: |
             echo "📊 Adding new benchmark column to existing README.md report..."
             
-            # Check if README.md has benchmark table structure
-            if ! grep -q "<!-- BENCHMARK_RESULTS_START -->" README.md; then
-              echo "⚠️ README.md doesn't have benchmark table structure. Creating initial report first..."
-              # Use deprecated script to create initial report
-              BENCHMARK_DIR="results/ai-benchmark/${{ env.APP_GIT_COMMIT }}/$(ls results/ai-benchmark/${{ env.APP_GIT_COMMIT }})"
-              python scripts/create_initial_benchmark_report.py --commit ${{ env.APP_GIT_COMMIT }} --dir "$BENCHMARK_DIR"
-              
-              # Inject initial report into README
-              LATEST_REPORT=$(ls -t results/reports/*.md | head -n 1)
-              awk '
-                BEGIN {inside=0}
-                /<!-- BENCHMARK_RESULTS_START -->/ {
+            echo "📝 Adding column to existing benchmark table..."
+            # Find the benchmark data directory for current commit
+            BENCHMARK_DIR="results/ai-benchmark/${{ env.APP_GIT_COMMIT }}/$(ls results/ai-benchmark/${{ env.APP_GIT_COMMIT }})"
+            
+            # Create intermediate report file in results/reports/
+            TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+            INTERMEDIATE_REPORT="results/reports/ai-benchmark_${{ env.APP_GIT_COMMIT }}_intermediate_${TIMESTAMP}.md"
+            
+            # First, extract existing README.md benchmark section as initial content
+            echo "📄 Extracting existing benchmark section from README.md..."
+            awk '
+              /<!-- BENCHMARK_RESULTS_START -->/, /<!-- BENCHMARK_RESULTS_END -->/ {
+                if ($0 !~ /<!-- BENCHMARK_RESULTS_.*-->/) {
                   print
-                  while ((getline line < "'"$LATEST_REPORT"'") > 0)
-                    print line
-                  close("'"$LATEST_REPORT"'")
-                  inside=1
-                  next
                 }
-                /<!-- BENCHMARK_RESULTS_END -->/ {
-                  inside=0
+              }
+            ' README.md > "$INTERMEDIATE_REPORT"
+            
+            echo "✅ Initial content extracted to $INTERMEDIATE_REPORT"
+            
+            # Add new column to intermediate report
+            python scripts/trace_ai_benchmark_comparison.py \
+              --existing-report "$INTERMEDIATE_REPORT" \
+              --commit ${{ env.APP_GIT_COMMIT }} \
+              --dir "$BENCHMARK_DIR"
+            
+            echo "✅ Intermediate report updated with new column"
+            
+            # Update README.md by substituting benchmark section (no recomputation!)
+            echo "🔄 Updating README.md with optimized substitution..."
+            awk '
+              /<!-- BENCHMARK_RESULTS_START -->/ {
+                print
+                # Read and print the complete intermediate file content
+                while ((getline line < "'"$INTERMEDIATE_REPORT"'") > 0) {
+                  print line
                 }
-                !inside
-              ' README.md > README.tmp
-              mv README.tmp README.md
-            else
-              echo "📝 Adding column to existing benchmark table..."
-              # Find the benchmark data directory for current commit
-              BENCHMARK_DIR="results/ai-benchmark/${{ env.APP_GIT_COMMIT }}/$(ls results/ai-benchmark/${{ env.APP_GIT_COMMIT }})"
-              
-              # Create intermediate report file in results/reports/
-              TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-              INTERMEDIATE_REPORT="results/reports/ai-benchmark_${{ env.APP_GIT_COMMIT }}_intermediate_${TIMESTAMP}.md"
-              
-              # First, extract existing README.md benchmark section as initial content
-              echo "📄 Extracting existing benchmark section from README.md..."
-              awk '
-                /<!-- BENCHMARK_RESULTS_START -->/, /<!-- BENCHMARK_RESULTS_END -->/ {
-                  if ($0 !~ /<!-- BENCHMARK_RESULTS_.*-->/) {
-                    print
-                  }
-                }
-              ' README.md > "$INTERMEDIATE_REPORT"
-              
-              echo "✅ Initial content extracted to $INTERMEDIATE_REPORT"
-              
-              # Add new column to intermediate report
-              python scripts/trace_ai_benchmark_comparison.py \
-                --existing-report "$INTERMEDIATE_REPORT" \
-                --commit ${{ env.APP_GIT_COMMIT }} \
-                --dir "$BENCHMARK_DIR"
-              
-              echo "✅ Intermediate report updated with new column"
-              
-              # Update README.md with the same content
-              python scripts/trace_ai_benchmark_comparison.py \
-                --existing-report "README.md" \
-                --commit ${{ env.APP_GIT_COMMIT }} \
-                --dir "$BENCHMARK_DIR"
-              
-              echo "✅ README.md updated successfully"
-            fi
-            echo "✅ Benchmark report updated"
+                close("'"$INTERMEDIATE_REPORT"'")
+                # Skip original content until BENCHMARK_RESULTS_END
+                while (getline && !/<!-- BENCHMARK_RESULTS_END -->/) {}
+                next
+              }
+              /<!-- BENCHMARK_RESULTS_END -->/ {
+                print
+                next
+              }
+              !/<!-- BENCHMARK_RESULTS_START -->/ && !/<!-- BENCHMARK_RESULTS_END -->/ {
+                print
+              }
+            ' README.md > README.tmp && mv README.tmp README.md
+            
+            echo "✅ README.md updated successfully (optimized - no recomputation!)"
 
         - name: Display Benchmark Results
           run: |
