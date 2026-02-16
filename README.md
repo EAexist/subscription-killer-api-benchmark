@@ -17,9 +17,7 @@
 </div>
 
 <!-- BENCHMARK_RESULTS -->
-<!-- BENCHMARK_RESULTS_START -->
 
-<!-- BENCHMARK_RESULTS_END -->
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
