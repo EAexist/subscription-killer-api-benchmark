@@ -94,10 +94,11 @@ def main():
             if download_file_from_github(args.repo_owner, args.repo_name, args.release_tag, file_name, args.output_dir):
                 success_count += 1
         
-        print(f"\n🎉 Downloaded {success_count}/3 files from release {args.release_tag}!")
+        print(f"\n🎉 Downloaded {success_count}/{len(files)} files!")
+        return success_count > 0 # Return True if at least one file worked
     else:
-        # Download latest release
-        download_latest_release_data(args.repo_owner, args.repo_name, args.output_dir)
+        # Download latest release - return the result of the function
+        return download_latest_release_data(args.repo_owner, args.repo_name, args.output_dir)
 
 if __name__ == "__main__":
     success = main()
