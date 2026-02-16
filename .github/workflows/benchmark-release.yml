@@ -110,8 +110,8 @@ jobs:
             results/reports/ai-metrics.csv
             results/reports/supplementary-metrics.csv
             results/reports/latest-benchmark-results.md
-          name: Benchmark Results - ${{ inputs.APP_GIT_TAG }}
-          tag_name: benchmark-${{ inputs.APP_GIT_TAG }}
+          name: ${{ inputs.APP_GIT_TAG }}
+          tag_name: ${{ inputs.APP_GIT_TAG }}
           body: |
             ## 📊 Benchmark Results
             

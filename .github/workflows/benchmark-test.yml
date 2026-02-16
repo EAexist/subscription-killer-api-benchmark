@@ -15,4 +15,4 @@ jobs:
   test-benchmark-data:
     uses: ./.github/workflows/benchmark-release.yml
     with:
-      APP_GIT_TAG: ${{ github.event.inputs.APP_GIT_TAG }}
+      APP_GIT_TAG: ${{ github.event.inputs.APP_GIT_TAG || 'benchmark-test' }}
