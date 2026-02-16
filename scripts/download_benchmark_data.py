@@ -40,6 +40,27 @@ def download_latest_release_data(repo_owner, repo_name, output_dir="results/repo
         # Get latest release info
         api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
         response = requests.get(api_url)
+        
+        if response.status_code == 404:
+            print(f"📭 No releases found for {repo_owner}/{repo_name}")
+            print(f"🔄 Creating initial release from local data...")
+            
+            # Try to create initial release from local data
+            local_benchmark_dir = "results/ai-benchmark/benchmark-test"
+            if os.path.exists(local_benchmark_dir):
+                success = create_initial_release_from_local_data(repo_owner, repo_name, local_benchmark_dir)
+                if success:
+                    print(f"🎉 Initial release created! Now downloading...")
+                    # Try downloading again after creating release
+                    return download_latest_release_data(repo_owner, repo_name, output_dir)
+                else:
+                    print(f"❌ Failed to create initial release")
+                    return False
+            else:
+                print(f"❌ No local benchmark data found at {local_benchmark_dir}")
+                print(f"💡 Please run main benchmark workflow first to generate data")
+                return False
+        
         response.raise_for_status()
         
         release_data = response.json()
@@ -71,6 +92,48 @@ def download_latest_release_data(repo_owner, repo_name, output_dir="results/repo
         return False
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+        return False
+
+
+def create_initial_release_from_local_data(repo_owner, repo_name, local_benchmark_dir):
+    """Create initial GitHub release from local benchmark data."""
+    try:
+        import subprocess
+        import json
+        
+        # Find the latest benchmark data directory
+        if os.path.exists(local_benchmark_dir):
+            subdirs = [d for d in os.listdir(local_benchmark_dir) if os.path.isdir(os.path.join(local_benchmark_dir, d))]
+            if not subdirs:
+                print(f"❌ No benchmark subdirectories found in {local_benchmark_dir}")
+                return False
+            
+            # Use the most recent subdirectory
+            latest_dir = sorted(subdirs)[-1]
+            benchmark_data_path = os.path.join(local_benchmark_dir, latest_dir)
+            
+            print(f"📁 Using benchmark data from: {benchmark_data_path}")
+            
+            # Create release using gh CLI
+            cmd = [
+                'gh', 'release', 'create', 'benchmark-initial',
+                '--title', 'Initial Benchmark Data',
+                '--notes', 'Initial benchmark data created from local test runs',
+                '--target', 'main',
+                benchmark_data_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                print(f"✅ Initial release 'benchmark-initial' created successfully!")
+                return True
+            else:
+                print(f"❌ Failed to create release: {result.stderr}")
+                return False
+                
+    except Exception as e:
+        print(f"❌ Error creating initial release: {e}")
         return False
 
 def main():
