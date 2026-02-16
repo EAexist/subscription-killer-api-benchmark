@@ -77,12 +77,27 @@ jobs:
             echo "✅ Created results/reports directory with template files"
           fi
       
+      - name: Find Latest Benchmark Directory
+        id: find-dir
+        run: |
+          # Find the latest timestamp directory for the given tag
+          BENCHMARK_DIR="results/ai-benchmark/${{ inputs.APP_GIT_TAG }}"
+          LATEST_TIMESTAMP_DIR=$(find "$BENCHMARK_DIR" -maxdepth 1 -type d -name "*_*" | sort -r | head -n 1)
+          
+          if [ -z "$LATEST_TIMESTAMP_DIR" ]; then
+            echo "Error: No timestamp directory found in $BENCHMARK_DIR"
+            exit 1
+          fi
+          
+          echo "Using latest timestamp directory: $LATEST_TIMESTAMP_DIR"
+          echo "latest_dir=$LATEST_TIMESTAMP_DIR" >> $GITHUB_OUTPUT
+      
       - name: Process CSV Data
         run: |
           python scripts/benchmarkUtils.py \
             --existing-report "results/ai-benchmark" \
             --commit "${{ inputs.APP_GIT_TAG }}" \
-            --dir "results/ai-benchmark/${{ inputs.APP_GIT_TAG }}"
+            --dir "${{ steps.find-dir.outputs.latest_dir }}"
       
       - name: Generate Markdown
         env:
@@ -94,7 +109,7 @@ jobs:
             --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
             --existing-report "results/ai-benchmark" \
             --commits "${{ inputs.APP_GIT_TAG }}" \
-            --dirs "results/ai-benchmark/${{ inputs.APP_GIT_TAG }}"
+            --dirs "${{ steps.find-dir.outputs.latest_dir }}"
 
       - name: Display Results
         run: |
