@@ -34,6 +34,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Download Benchmark Results
+        uses: actions/download-artifact@v4
+        with:
+          name: ai-benchmark-results-${{ inputs.app_git_tag }}
+          path: results/
+      
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
