@@ -63,7 +63,7 @@ def download_latest_release_data(repo_owner, repo_name, output_dir="results/repo
         files_to_download = [
             'ai-metrics.csv',
             'supplementary-metrics.csv', 
-            'latest-benchmark-results.md'
+            '.md'
         ]
         
         success_count = 0
@@ -93,13 +93,12 @@ def main():
     
     if args.release_tag:
         # Download specific release
-        files_to_download = ['ai-metrics.csv', 'supplementary-metrics.csv', 'latest-benchmark-results.md']
         success_count = 0
-        for file_name in files_to_download:
+        for file_name in ['ai-metrics.csv', 'supplementary-metrics.csv']:
             if download_file_from_github(args.repo_owner, args.repo_name, args.release_tag, file_name, args.output_dir):
                 success_count += 1
         
-        print(f"\n🎉 Downloaded {success_count}/{len(files_to_download)} files from release {args.release_tag}!")
+        print(f"\n🎉 Downloaded {success_count}/3 files from release {args.release_tag}!")
     else:
         # Download latest release
         download_latest_release_data(args.repo_owner, args.repo_name, args.output_dir)
@@ -107,3 +106,4 @@ def main():
 if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)
+latest-benchmark-results
