@@ -99,6 +99,9 @@ jobs:
           echo "latest_dir=$LATEST_TIMESTAMP_DIR" >> $GITHUB_OUTPUT
       
       - name: Process CSV Data
+        env:
+          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
+          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION }}
         run: |
           python scripts/benchmarkUtils.py \
             --existing-report "results/ai-benchmark" \
