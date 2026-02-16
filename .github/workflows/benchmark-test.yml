@@ -1,0 +1,21 @@
+name: Benchmark Test (No Execution)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'Commit hash to test with'
+        required: true
+        type: string
+      benchmark_dir:
+        description: 'Existing benchmark directory path'
+        required: false
+        type: string
+
+jobs:
+  test-benchmark-data:
+    uses: ./.github/workflows/benchmark-data-processing.yml
+    with:
+      commit_hash: ${{ github.event.inputs.commit_hash }}
+      benchmark_dir: ${{ github.event.inputs.benchmark_dir || 'results/ai-benchmark/default' }}
+      skip_download: false

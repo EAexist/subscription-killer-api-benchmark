@@ -1,0 +1,148 @@
+name: Benchmark Data Processing
+
+on:
+  workflow_call:
+    inputs:
+      commit_hash:
+        description: 'Commit hash to process'
+        required: true
+        type: string
+      benchmark_dir:
+        description: 'Benchmark directory path'
+        required: false
+        type: string
+      skip_download:
+        description: 'Skip downloading data (default: false)'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      ai_csv_path:
+        description: 'Path to AI metrics CSV'
+        value: ${{ jobs.process-data.outputs.ai_csv_path }}
+      supplementary_csv_path:
+        description: 'Path to supplementary metrics CSV'
+        value: ${{ jobs.process-data.outputs.supplementary_csv_path }}
+      markdown_path:
+        description: 'Path to generated markdown'
+        value: ${{ jobs.process-data.outputs.markdown_path }}
+
+jobs:
+  process-data:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      ai_csv_path: ${{ steps.setup.outputs.ai_csv_path }}
+      supplementary_csv_path: ${{ steps.setup.outputs.supplementary_csv_path }}
+      markdown_path: ${{ steps.setup.outputs.markdown_path }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Setup Paths
+        id: setup
+        run: |
+          echo "ai_csv_path=results/reports/ai-metrics.csv" >> $GITHUB_OUTPUT
+          echo "supplementary_csv_path=results/reports/supplementary-metrics.csv" >> $GITHUB_OUTPUT
+          echo "markdown_path=results/reports/latest-benchmark-results.md" >> $GITHUB_OUTPUT
+      
+      - name: Download Benchmark Data
+        if: ${{ !inputs.skip_download }}
+        run: |
+          python scripts/download_benchmark_data.py \
+            --repo-owner "EAexist" \
+            --repo-name "subscription-killer-api" \
+            --output-dir "results/reports"
+      
+      - name: Process CSV Data
+        run: |
+          python scripts/benchmarkUtils.py \
+            --existing-report "results/ai-benchmark" \
+            --commit "${{ inputs.commit_hash }}" \
+            --dir "${{ inputs.benchmark_dir || 'results/ai-benchmark/default' }}"
+      
+      - name: Generate Markdown
+        run: |
+          python scripts/markdownUtils.py \
+            --ai-csv "${{ steps.setup.outputs.ai_csv_path }}" \
+            --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
+            --existing-report "results/ai-benchmark" \
+            --commits "${{ inputs.commit_hash }}" \
+            --dirs "${{ inputs.benchmark_dir || 'results/ai-benchmark/default' }}"
+      
+      - name: Update README.md
+        run: |
+          # Create a temporary script to properly replace benchmark results
+          cat > replace_benchmark.awk << 'EOF'
+          BEGIN {
+            in_benchmark_section = 0
+            skip_content = 0
+          }
+          
+          /<!-- BENCHMARK_RESULTS_START -->/ {
+            in_benchmark_section = 1
+            skip_content = 1
+            print
+            # Print the new benchmark content
+            while ((getline line < "${{ steps.setup.outputs.markdown_path }}") > 0) {
+              print line
+            }
+            close("${{ steps.setup.outputs.markdown_path }}")
+            next
+          }
+          
+          /<!-- BENCHMARK_RESULTS_END -->/ {
+            if (in_benchmark_section && skip_content) {
+              in_benchmark_section = 0
+              skip_content = 0
+            }
+            print
+            next
+          }
+          
+          {
+            if (!skip_content) {
+              print
+            }
+          }
+          EOF
+          
+          awk -f replace_benchmark.awk README.md > README.tmp && mv README.tmp README.md
+          
+          echo "✅ README.md updated successfully"
+      
+      - name: Display Results
+        run: |
+          echo "📊 Displaying benchmark results..."
+          
+          # Display AI Metrics CSV
+          echo "## 🤖 AI Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`csv" >> $GITHUB_STEP_SUMMARY
+          cat "${{ steps.setup.outputs.ai_csv_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+          # Display Supplementary Metrics CSV
+          echo "## 📈 Supplementary Performance Indicators" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`csv" >> $GITHUB_STEP_SUMMARY
+          cat "${{ steps.setup.outputs.supplementary_csv_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+          # Display Markdown Content
+          echo "## 📝 Generated Markdown" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
+          cat "${{ steps.setup.outputs.markdown_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,136 @@
+name: Benchmark Trigger
+
+on:
+  repository_dispatch:
+    types: [new_ai_benchmark_build]
+
+jobs:
+  run-benchmark:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+    outputs:
+      commit_hash: ${{ steps.extract-metadata.outputs.commit_hash }}
+      benchmark_dir: ${{ steps.extract-metadata.outputs.benchmark_dir }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata from Image
+        id: extract-metadata
+        run: |
+          # Set IMAGE_NAME from payload
+          IMAGE_NAME="${{ github.event.client_payload.image_name }}"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          
+          # Debug: Print the IMAGE_NAME
+          echo "Debug: IMAGE_NAME='$IMAGE_NAME'"
+          
+          # Validation: Fail the build if IMAGE_NAME is empty
+          if [ -z "$IMAGE_NAME" ]; then
+            echo "ERROR: IMAGE_NAME is empty in payload. Check the repository dispatch payload."
+            echo "Available payload keys:"
+            echo "${{ toJson(github.event.client_payload) }}"
+            exit 1
+          fi
+          
+          docker pull "$IMAGE_NAME"
+          
+          # Extract labels
+          RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE_NAME")
+          COMMIT_HASH=${RAW_COMMIT:0:7}
+          
+          # Create benchmark directory
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          BENCHMARK_DIR="results/ai-benchmark/${COMMIT_HASH}/${TIMESTAMP}"
+          mkdir -p "$BENCHMARK_DIR"
+          
+          # Set outputs for downstream jobs
+          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+          echo "benchmark_dir=${BENCHMARK_DIR}" >> $GITHUB_OUTPUT
+          
+          # Set environment variables
+          echo "APP_GIT_COMMIT=${COMMIT_HASH}" >> $GITHUB_ENV
+          echo "BENCHMARK_DIR=${BENCHMARK_DIR}" >> $GITHUB_ENV
+
+      - name: Run Benchmark Tests
+        run: |
+          echo "🚀 Starting benchmark execution..."
+          echo "Commit: ${{ env.APP_GIT_COMMIT }}"
+          echo "Directory: ${{ env.BENCHMARK_DIR }}"
+          
+          # Run benchmark tests against the Docker image
+          docker run --rm \
+            -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
+            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -v "${{ env.BENCHMARK_DIR }}:/app/results" \
+            "${{ env.IMAGE_NAME }}" \
+            bash -c "
+              cd /app
+              ./run-benchmark.sh
+            "
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results-${{ env.APP_GIT_COMMIT }}
+          path: ${{ env.BENCHMARK_DIR }}
+
+  process-benchmark-data:
+    needs: run-benchmark
+    uses: ./.github/workflows/benchmark-data-processing.yml
+    with:
+      commit_hash: ${{ needs.run-benchmark.outputs.commit_hash }}
+      benchmark_dir: ${{ needs.run-benchmark.outputs.benchmark_dir }}
+      skip_download: false
+
+  create-release:
+    needs: process-benchmark-data
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Create GitHub Release with Benchmark Data
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            results/reports/ai-metrics.csv
+            results/reports/supplementary-metrics.csv
+            results/reports/latest-benchmark-results.md
+          name: Benchmark Results - ${{ needs.run-benchmark.outputs.commit_hash }}
+          tag_name: benchmark-${{ needs.run-benchmark.outputs.commit_hash }}
+          body: |
+            ## 📊 Benchmark Results
+            
+            **Commit:** ${{ needs.run-benchmark.outputs.commit_hash }}
+            **Date:** ${{ github.event.head_commit.timestamp }}
+            
+            This release contains the latest benchmark results including:
+            - AI Cost metrics (CSV)
+            - Supplementary performance indicators (CSV) 
+            - Formatted markdown report (MD)
+            
+            ### 📁 Files Included
+            - `ai-metrics.csv` - AI token usage and cost data
+            - `supplementary-metrics.csv` - Performance indicators data
+            - `latest-benchmark-results.md` - Formatted markdown report
+            
+            ---
+            *Generated automatically by GitHub Actions benchmark workflow*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
