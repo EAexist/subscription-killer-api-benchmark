@@ -58,6 +58,8 @@ jobs:
           echo "markdown_path=results/reports/latest-benchmark-results.md" >> $GITHUB_OUTPUT
       
       - name: Create Initial Setup (if needed)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Check if any release exists by counting lines of output from 'list'
           RELEASE_EXISTS=$(gh release list --limit 1 | wc -l)
