@@ -125,9 +125,7 @@ jobs:
       - name: Display Results
         run: |
           echo "📊 Displaying benchmark results..."
-          echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
           cat "${{ steps.setup.outputs.markdown_path }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
       
       - name: Create GitHub Release with Benchmark Data
         uses: softprops/action-gh-release@v1
