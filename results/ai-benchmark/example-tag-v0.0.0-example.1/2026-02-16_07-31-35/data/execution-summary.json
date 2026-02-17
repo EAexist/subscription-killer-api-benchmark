@@ -3,7 +3,7 @@
   "testType" : "Performance Benchmark",
   "source" : "Spring Boot Actuator /actuator/prometheus",
   "artifactName" : "subscription-killer-api",
-  "gitCommitHash" : "0eeeddf",
+  "gitCommitHash" : "example",
   "dockerImage" : "com.matchalab/subscription-killer-api:0.0.1-SNAPSHOT-0eeeddf",
   "averageResponseTime" : 0.0,
   "totalRequests" : 0,

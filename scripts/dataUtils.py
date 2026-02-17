@@ -35,8 +35,11 @@ def find_benchmark_directories(base_path: str) -> List[Tuple[str, str]]:
         print(f"Error: Base directory {base_path} does not exist")
         return benchmark_dirs
 
+    # Exclude sample directories
+    EXCLUDED_DIRS = {'zzz-sample-benchmark', 'benchmark-test', 'sample', 'example'}
+
     for commit_dir in base_dir.iterdir():
-        if not commit_dir.is_dir():
+        if not commit_dir.is_dir() or commit_dir.name in EXCLUDED_DIRS:
             continue
 
         commit_hash = commit_dir.name

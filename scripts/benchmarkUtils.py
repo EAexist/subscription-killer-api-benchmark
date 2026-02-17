@@ -45,8 +45,8 @@ def main():
     ai_metrics_csv = os.path.join("results", "reports", "ai-metrics.csv")
     supplementary_metrics_csv = os.path.join("results", "reports", "supplementary-metrics.csv")
     
-    # Get the new commit and its tag
-    new_commit = list(commits_data.keys())[-1]  # Last commit is the new one
+    # Get the new commit and its tag (use the specific commit passed as parameter)
+    new_commit = args.commit
     new_tag = commits_data[new_commit]['_tag']
     new_metrics = commits_data[new_commit]
     

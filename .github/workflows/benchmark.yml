@@ -116,7 +116,7 @@ jobs:
         with:
           name: ai-benchmark-results-${{ env.APP_GIT_TAG }}
           path: |
-            results/ai-benchmark/
+            results/ai-benchmark/${{ env.APP_GIT_TAG }}
             results/reports/
           retention-days: 30
 
