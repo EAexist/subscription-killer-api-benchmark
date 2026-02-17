@@ -162,10 +162,11 @@ jobs:
       - name: Update README.md
         run: |
           # Create a temporary script to properly replace benchmark results
-          cat > replace_benchmark.awk << 'EOF'
+          cat > replace_benchmark.awk << EOF
           BEGIN {
             in_benchmark_section = 0
             skip_content = 0
+            markdown_file = "${{ steps.setup.outputs.markdown_path }}"
           }
           
           /<!-- BENCHMARK_RESULTS_START -->/ {
@@ -173,10 +174,10 @@ jobs:
             skip_content = 1
             print
             # Print the new benchmark content
-            while ((getline line < "${{ steps.setup.outputs.markdown_path }}") > 0) {
+            while ((getline line < markdown_file) > 0) {
               print line
             }
-            close("${{ steps.setup.outputs.markdown_path }}")
+            close(markdown_file)
             next
           }
           
