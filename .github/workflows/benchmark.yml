@@ -2,18 +2,23 @@ name: Benchmark Trigger
 
 on:
   repository_dispatch:
-    types: [new_build]
+    types: [new_ai_benchmark_build]
 
 jobs:
   run-benchmark:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: read
+    outputs:
+      benchmark_dir: ${{ steps.extract-metadata.outputs.benchmark_dir }}
+      app_git_tag: ${{ steps.extract-metadata.outputs.app_git_tag }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -26,15 +31,28 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Metadata from Image
+        id: extract-metadata
         run: |
           # Set IMAGE_NAME from payload
-          echo "IMAGE_NAME=${{ github.event.client_payload.image_name }}" >> $GITHUB_ENV
+          IMAGE_NAME="${{ github.event.client_payload.image_name }}"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
           
-          docker pull ${{ env.IMAGE_NAME }}
+          # Debug: Print the IMAGE_NAME
+          echo "Debug: IMAGE_NAME='$IMAGE_NAME'"
+          
+          # Validation: Fail the build if IMAGE_NAME is empty
+          if [ -z "$IMAGE_NAME" ]; then
+            echo "ERROR: IMAGE_NAME is empty in payload. Check the repository dispatch payload."
+            echo "Available payload keys:"
+            echo "${{ toJson(github.event.client_payload) }}"
+            exit 1
+          fi
+          
+          docker pull "$IMAGE_NAME"
           
           # Extract labels
-          RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' ${{ env.IMAGE_NAME }})
-          RAW_TAG=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.ref.name"}}' ${{ env.IMAGE_NAME }})
+          RAW_COMMIT=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE_NAME")
+          RAW_TAG=$(docker inspect --format='{{index .Config.Labels "org.opencontainers.image.ref.name"}}' "$IMAGE_NAME")
           
           # Validation: Fail the build if COMMIT is empty
           if [ -z "$RAW_COMMIT" ] || [ "$RAW_COMMIT" == "<no value>" ]; then
@@ -42,8 +60,18 @@ jobs:
           exit 1
           fi
           
+          # Validation: Fail the build if TAG is empty
+          if [ -z "$RAW_TAG" ] || [ "$RAW_TAG" == "<no value>" ]; then
+          echo "ERROR: OCI Ref Name (tag) missing in image metadata. Ensure Gradle build passes -PGIT_TAG."
+          exit 1
+          fi
+          
           echo "APP_GIT_COMMIT=$RAW_COMMIT" >> $GITHUB_ENV
           echo "APP_GIT_TAG=$RAW_TAG" >> $GITHUB_ENV
+          
+          # Set outputs for other jobs
+          echo "benchmark_dir=$RAW_TAG" >> $GITHUB_OUTPUT
+          echo "app_git_tag=$RAW_TAG" >> $GITHUB_OUTPUT
 
       - name: Write Spring environment file
         run: |
@@ -57,16 +85,22 @@ jobs:
           # Clean up temporary files
           rm .env.spring.benchmark.part1 .env.spring.benchmark.part2
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
       - name: Run Benchmark
         env:
           # Only benchmark-specific variables
           APP_GIT_COMMIT: ${{ env.APP_GIT_COMMIT }}
           APP_GIT_TAG: ${{ env.APP_GIT_TAG }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          
+
           # AI Cost Benchmark configuration
-          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_INPUT_TOKEN_PRICE }}
-          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_OUTPUT_TOKEN_PRICE }}
+          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
+          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION }}
           AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS: ${{ vars.AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS }}
           AI_BENCHMARK_ENDPOINT: ${{ vars.AI_BENCHMARK_ENDPOINT }}
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
@@ -80,6 +114,14 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ai-benchmark-results-${{ env.APP_GIT_COMMIT }}
-          path: results/ai-benchmark/
+          name: ai-benchmark-results-${{ env.APP_GIT_TAG }}
+          path: |
+            results/ai-benchmark/${{ env.APP_GIT_TAG }}
+            results/reports/
           retention-days: 30
+
+  process-benchmark-data:
+    needs: run-benchmark
+    uses: ./.github/workflows/benchmark-release.yml
+    with:
+      app_git_tag: ${{ needs.run-benchmark.outputs.app_git_tag }}

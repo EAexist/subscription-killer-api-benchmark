@@ -31,3 +31,8 @@ buildNumber.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Benchmark Results (ignore contents, keep directories)
+results/ai-benchmark/*
+!results/ai-benchmark/example-tag-v0.0.0-example.1
+results/reports

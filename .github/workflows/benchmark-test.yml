@@ -1,0 +1,15 @@
+name: Benchmark Test (No Execution)
+
+on:
+  workflow_dispatch:
+    inputs:
+      APP_GIT_TAG:
+        description: 'Git tag for release naming'
+        required: true
+        type: string
+
+jobs:
+  test-benchmark-data:
+    uses: ./.github/workflows/benchmark-release.yml
+    with:
+      APP_GIT_TAG: ${{ github.event.inputs.APP_GIT_TAG || 'benchmark-test' }}
