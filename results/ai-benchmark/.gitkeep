@@ -1,0 +1,2 @@
+# This file ensures the ai-benchmark directory is tracked by git
+# while allowing all benchmark result contents to be ignored

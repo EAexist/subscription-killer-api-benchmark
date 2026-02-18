@@ -18,7 +18,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -137,19 +139,24 @@ public class PerformanceBenchmarkTest {
         
         saveRawPrometheusMetrics(benchmarkDir);
         saveRawZipkinData(benchmarkDir);
+        saveSpringBootLogs(benchmarkDir);
         generateBenchmarkMetadata(benchmarkDir);
         generateBenchmarkComparison();
         
-        // Keep containers running for log inspection
-        System.out.println("=== Benchmark Completed ===");
-        System.out.println("Spring Boot: http://localhost:" + springApp.getMappedPort(8080));
-        System.out.println("Zipkin: http://localhost:" + zipkin.getMappedPort(9411));
-        System.out.println("Containers running. Press Ctrl+C to stop.");
-        
-        try {
-            Thread.sleep(300000); // Keep running for 5 minutes
-        } catch (InterruptedException e) {
-            System.out.println("Test interrupted");
+        // Keep containers running for log inspection (if enabled)
+        String keepContainers = System.getenv().getOrDefault("AI_BENCHMARK_KEEP_CONTAINERS", "false");
+        if ("true".equalsIgnoreCase(keepContainers)) {
+            System.out.println("=== Benchmark Completed ===");
+            System.out.println("Spring Boot: http://localhost:" + springApp.getMappedPort(8080));
+            System.out.println("Zipkin: http://localhost:" + zipkin.getMappedPort(9411));
+            System.out.println("Containers running. Press Ctrl+C to stop.");
+            
+            long waitTime = Long.parseLong(System.getenv().getOrDefault("AI_BENCHMARK_WAIT_TIME_MS", "300000"));
+            try {
+                Thread.sleep(waitTime);
+            } catch (InterruptedException e) {
+                System.out.println("Test interrupted");
+            }
         }
     }
     
@@ -238,13 +245,50 @@ public class PerformanceBenchmarkTest {
     }
     
     /**
+     * Saves Spring Boot application logs from the container.
+     */
+    private void saveSpringBootLogs(Path benchmarkDir) {
+        try {
+            // Get logs from the Spring Boot container
+            String logs = springApp.getLogs();
+            
+            if (logs != null && !logs.isEmpty()) {
+                // Save raw logs
+                Path logFile = benchmarkDir.resolve("data").resolve("spring-boot-logs.txt");
+                Files.createDirectories(logFile.getParent());
+                Files.write(logFile, logs.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                
+                // Also save as JSON wrapper for consistency
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode wrapper = mapper.createObjectNode();
+                wrapper.put("source", "spring-boot-container");
+                wrapper.put("containerId", springApp.getContainerId());
+                wrapper.put("contentType", "text/plain");
+                wrapper.put("rawData", logs);
+                
+                Path jsonFile = benchmarkDir.resolve("data").resolve("spring-boot-logs.json");
+                try (FileWriter writer = new FileWriter(jsonFile.toFile())) {
+                    writer.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(wrapper));
+                }
+                
+                System.out.println("✅ Spring Boot logs saved to: " + logFile);
+            } else {
+                System.err.println("⚠️  No Spring Boot logs available");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error saving Spring Boot logs: " + e.getMessage());
+        }
+    }
+    
+    /**
      * Creates benchmark directory structure.
      */
     private Path createBenchmarkDirectory() throws java.io.IOException {
-        String gitCommitHash = System.getenv().getOrDefault("APP_GIT_COMMIT", "unknown");
+        String gitTag = System.getenv().getOrDefault("APP_GIT_TAG", "unknown");
         String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         
-        Path baseDir = java.nio.file.Paths.get("results", "ai-benchmark", gitCommitHash, timestamp);
+        Path baseDir = java.nio.file.Paths.get("results", "ai-benchmark", gitTag, timestamp);
         java.nio.file.Files.createDirectories(baseDir);
         
         java.nio.file.Files.createDirectories(baseDir.resolve("data"));

@@ -1,0 +1,201 @@
+name: Benchmark Data Processing
+
+on:
+  workflow_call:
+    inputs:
+      app_git_tag:
+        description: 'Git tag for release naming'
+        required: true
+        type: string
+    outputs:
+      ai_csv_path:
+        description: 'Path to AI metrics CSV'
+        value: ${{ jobs.process-data.outputs.ai_csv_path }}
+      supplementary_csv_path:
+        description: 'Path to supplementary metrics CSV'
+        value: ${{ jobs.process-data.outputs.supplementary_csv_path }}
+      markdown_path:
+        description: 'Path to generated markdown'
+        value: ${{ jobs.process-data.outputs.markdown_path }}
+
+jobs:
+  process-data:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      ai_csv_path: ${{ steps.setup.outputs.ai_csv_path }}
+      supplementary_csv_path: ${{ steps.setup.outputs.supplementary_csv_path }}
+      markdown_path: ${{ steps.setup.outputs.markdown_path }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Download Benchmark Results
+        uses: actions/download-artifact@v4
+        with:
+          name: ai-benchmark-results-${{ inputs.app_git_tag }}
+          path: results/
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Setup Paths
+        id: setup
+        run: |
+          echo "ai_csv_path=results/reports/ai-metrics.csv" >> $GITHUB_OUTPUT
+          echo "supplementary_csv_path=results/reports/supplementary-metrics.csv" >> $GITHUB_OUTPUT
+          echo "markdown_path=results/reports/latest-benchmark-results.md" >> $GITHUB_OUTPUT
+      
+      - name: Create Initial Setup (if needed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if any release exists by counting lines of output from 'list'
+          RELEASE_EXISTS=$(gh release list --limit 1 | wc -l)
+
+          if [ "$RELEASE_EXISTS" -gt 0 ]; then
+            echo "✅ Releases already exist, downloading them"
+            
+            # Download existing releases
+            python scripts/download_benchmark_data.py \
+              --repo-owner "EAexist" \
+              --repo-name "subscription-killer-api-benchmark" \
+              --output-dir "results/reports"
+          else
+            echo "📭 No releases found, creating results/reports from template files..."
+            
+            # Create results/reports directory
+            mkdir -p results/reports
+            
+            # Copy template files to results/reports
+            cp results/templates/ai-metrics.csv results/reports/
+            cp results/templates/supplementary-metrics.csv results/reports/
+            
+            echo "✅ Created results/reports directory with template files"
+          fi
+      
+      - name: Find Latest Benchmark Directory
+        id: find-dir
+        run: |
+          # Find the latest timestamp directory for the given tag
+          BENCHMARK_DIR="results/ai-benchmark/${{ inputs.app_git_tag }}"
+          LATEST_TIMESTAMP_DIR=$(find "$BENCHMARK_DIR" -maxdepth 1 -type d -name "*_*" | sort -r | head -n 1)
+          
+          if [ -z "$LATEST_TIMESTAMP_DIR" ]; then
+            echo "Error: No timestamp directory found in $BENCHMARK_DIR"
+            exit 1
+          fi
+          
+          echo "Using latest timestamp directory: $LATEST_TIMESTAMP_DIR"
+          echo "latest_dir=$LATEST_TIMESTAMP_DIR" >> $GITHUB_OUTPUT
+      
+      - name: Process CSV Data
+        env:
+          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
+          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION }}
+        run: |
+          python scripts/benchmarkUtils.py \
+            --existing-report "results/ai-benchmark" \
+            --commit "${{ inputs.app_git_tag }}" \
+            --dir "${{ steps.find-dir.outputs.latest_dir }}"
+      
+      - name: Generate Markdown
+        env:
+          GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
+          GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_OUTPUT_TOKEN_PRICE_PER_MILLION }}
+        run: |
+          python scripts/markdownUtils.py \
+            --ai-csv "${{ steps.setup.outputs.ai_csv_path }}" \
+            --supplementary-csv "${{ steps.setup.outputs.supplementary_csv_path }}" \
+            --existing-report "results/ai-benchmark" \
+            --commits "${{ inputs.app_git_tag }}" \
+            --dirs "${{ steps.find-dir.outputs.latest_dir }}"
+
+      - name: Display Results
+        run: |
+          echo "📊 Displaying benchmark results..."
+          cat "${{ steps.setup.outputs.markdown_path }}" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Create GitHub Release with Benchmark Data
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            results/reports/ai-metrics.csv
+            results/reports/supplementary-metrics.csv
+            results/reports/latest-benchmark-results.md
+          name: ${{ inputs.app_git_tag }}
+          tag_name: ${{ inputs.app_git_tag }}
+          body: |
+            ## 📊 Benchmark Results
+            
+            **Commit:** ${{ inputs.app_git_tag }}
+            
+            ### 📁 Files Included
+            - `ai-metrics.csv` - AI token usage and cost data
+            - `supplementary-metrics.csv` - Performance indicators data
+            - `latest-benchmark-results.md` - Formatted markdown report
+            
+            ---
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update README.md
+        run: |
+          # Create a temporary script to properly replace benchmark results
+          cat > replace_benchmark.awk << EOF
+          BEGIN {
+            in_benchmark_section = 0
+            skip_content = 0
+            markdown_file = "${{ steps.setup.outputs.markdown_path }}"
+          }
+          
+          /<!-- BENCHMARK_RESULTS_START -->/ {
+            in_benchmark_section = 1
+            skip_content = 1
+            print
+            # Print the new benchmark content
+            while ((getline line < markdown_file) > 0) {
+              print line
+            }
+            close(markdown_file)
+            next
+          }
+          
+          /<!-- BENCHMARK_RESULTS_END -->/ {
+            if (in_benchmark_section && skip_content) {
+              in_benchmark_section = 0
+              skip_content = 0
+            }
+            print
+            next
+          }
+          
+          {
+            if (!skip_content) {
+              print
+            }
+          }
+          EOF
+          
+          awk -f replace_benchmark.awk README.md > README.tmp && mv README.tmp README.md
+          
+          echo "✅ README.md updated successfully"
+
+      - name: Commit and Push README
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: auto-update benchmark results [skip ci]" || echo "No changes"
+          git push
