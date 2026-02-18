@@ -18,7 +18,33 @@
 
 <!-- BENCHMARK_RESULTS -->
 <!-- BENCHMARK_RESULTS_START -->
+## 📊 Latest AI Cost Benchmark
 
+### AI Token Usage and Cost
+
+| Metric | benchmark-test-b6f280ec | benchmark-test-c0466ce6 |
+|--------|--------|--------|
+| AI Cost | $0.317 / 1K requests | $0.799 / 1K requests (++152.1%) |
+| Input Token Count | 472 tokens | 1112 tokens |
+| Output Token Count | 27 tokens | 81 tokens |
+| Total Tokens | 499 tokens | 1193 tokens |
+
+*Model: gemini-3-flash-preview. Input Token Price: $0.50 / million. Output Token Price: $3.00 / million.
+
+### Supplementary Performance Indicators
+
+*Indicative metrics based on limited test iterations for development insights.*
+
+| Metric | benchmark-test-b6f280ec | benchmark-test-c0466ce6 |
+|--------|--------|--------|
+| Indicative Latency | 3.27 s | 28.18 s |
+| Gmail API Critical I/O | 1.63 s | 1.85 s |
+| AI Critical I/O | 1.18 s | 26.30 s |
+| Total Critical I/O | 2.52 s | 27.82 s |
+| Orchestration Overhead | 0.75 s | 0.37 s |
+
+---
+*AI Cost Benchmark: 1 test iteration(s) per commit after 0 warmup exclusion.*
 <!-- BENCHMARK_RESULTS_END -->
 
 
