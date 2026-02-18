@@ -7,9 +7,6 @@ on:
         description: 'Git tag for release naming'
         required: true
         type: string
-  push:
-    branches:
-      - chore/ai-benchmark-ci
 
 jobs:
   test-benchmark-data:
