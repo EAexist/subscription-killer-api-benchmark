@@ -140,12 +140,6 @@ jobs:
             ## 📊 Benchmark Results
             
             **Commit:** ${{ inputs.app_git_tag }}
-            **Date:** ${{ github.event.head_commit.timestamp }}
-            
-            This release contains the latest benchmark results including:
-            - AI Cost metrics (CSV)
-            - Supplementary performance indicators (CSV) 
-            - Formatted markdown report (MD)
             
             ### 📁 Files Included
             - `ai-metrics.csv` - AI token usage and cost data
@@ -153,7 +147,6 @@ jobs:
             - `latest-benchmark-results.md` - Formatted markdown report
             
             ---
-            *Generated automatically by GitHub Actions benchmark workflow*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
