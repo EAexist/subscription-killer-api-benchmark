@@ -51,7 +51,7 @@ class LangfuseDataClient:
 
     def fetch_benchmark_generations(
         self,
-        version: str,
+        app_version: str,
         expected_count: Optional[int] = None,
         max_retries: int = 5,
         initial_delay: int = 30,
@@ -60,19 +60,19 @@ class LangfuseDataClient:
         Fetch generations with retry logic to handle Langfuse cloud delays.
 
         Args:
-            version: The version/tag to fetch
+            app_version: The app_version/tag to fetch
             expected_count: Expected number of generations (for retry logic)
             max_retries: Maximum number of retry attempts
             initial_delay: Initial delay in seconds (will increase exponentially)
         """
-        logger.info(f"📊 Fetching generations for tag: {version}...")
+        logger.info(f"📊 Fetching generations for tag: {app_version}...")
 
         for attempt in range(max_retries):
             try:
                 response = self.client.api.observations_v_2.get_many(
                     type="GENERATION",
                     limit=100,  # Increased limit for better efficiency
-                    version=version,
+                    app_version=app_version,
                     fields="core,basic,usage,metadata",
                     expand_metadata="attributes",
                 )
@@ -81,13 +81,15 @@ class LangfuseDataClient:
 
                 # If no expected count specified, return first successful fetch
                 if expected_count is None:
-                    logger.info(f"✅ Found {count} generations for version {version}")
+                    logger.info(
+                        f"✅ Found {count} generations for app_version {app_version}"
+                    )
                     return observations
 
                 # If we have enough data, return it
                 if count >= expected_count:
                     logger.info(
-                        f"✅ Found all {count} generations for version {version}"
+                        f"✅ Found all {count} generations for app_version {app_version}"
                     )
                     return observations
 
@@ -163,7 +165,7 @@ class LangfuseDataClient:
                         "cost_input": cost_input,
                         "cost_output": cost_output,
                         "cost_total": cost_total,
-                        "version": gen.get("version", "Unknown"),
+                        "app_version": gen.get("app_version", "Unknown"),
                     }
                 )
             except Exception as e:

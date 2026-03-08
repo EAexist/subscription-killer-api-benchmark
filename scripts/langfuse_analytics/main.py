@@ -4,8 +4,11 @@ Main entry point for Langfuse analytics pipeline.
 Fetches data, processes it, and generates visualizations.
 """
 
+import argparse
+import logging
 import os
 import sys
+from datetime import datetime
 
 from analytics.calculator import BenchmarkCalculator
 from analytics.data_client import LangfuseDataClient
@@ -13,9 +16,45 @@ from analytics.loader import load_and_merge_csv_files, save_raw_data
 from analytics.visualizer import BenchmarkVisualizer
 
 
+def setup_logging(app_version: str):
+    """Setup logging to both console and file."""
+    # Use DATA_STORAGE_ROOT environment variable if available, otherwise default path
+    data_storage_root = os.getenv(
+        "DATA_STORAGE_ROOT", os.path.join(os.getcwd(), "..", "..", "data-storage")
+    )
+    logs_dir = os.path.join(data_storage_root, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+
+    # Create log filename with app_version and timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = f"analytics_{app_version}_{timestamp}.log"
+    log_filepath = os.path.join(logs_dir, log_filename)
+
+    # Setup logging configuration
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_filepath), logging.StreamHandler(sys.stdout)],
+    )
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Logging to file: {log_filepath}")
+    return logger
+
+
 def main():
     """Main analytics pipeline."""
-    print("🚀 Starting Langfuse Analytics Pipeline")
+    parser = argparse.ArgumentParser(description="Langfuse Analytics Pipeline")
+    parser.add_argument(
+        "--app-version", required=True, help="App version/tag to fetch from Langfuse"
+    )
+    args = parser.parse_args()
+
+    app_version = args.app_version
+    logger = setup_logging(app_version)
+    logger.info(
+        f"🚀 Starting Langfuse Analytics Pipeline for app_version: {app_version}"
+    )
 
     # Initialize components
     client = LangfuseDataClient()
@@ -23,36 +62,36 @@ def main():
 
     try:
         # 1. Fetch data from Langfuse
-        print("📊 Fetching data from Langfuse...")
+        logger.info("📊 Fetching data from Langfuse...")
         # Fetch without expected count for now (can be added later if needed)
-        generations = client.fetch_benchmark_generations("benchmark")
+        generations = client.fetch_benchmark_generations(app_version)
 
         if not generations:
-            print("❌ No data found in Langfuse")
+            logger.error("❌ No data found in Langfuse")
             return
 
-        print(f"✅ Found {len(generations)} generations")
+        logger.info(f"✅ Found {len(generations)} generations")
 
         # Transform to DataFrame
         df = client.transform_to_dataframe(generations)
-        print(f"📋 DataFrame shape: {df.shape}")
+        logger.info(f"📋 DataFrame shape: {df.shape}")
 
         # 2. Save raw data as CSV
-        print("💾 Saving raw data...")
+        logger.info("💾 Saving raw data...")
         csv_path = save_raw_data(df, "benchmark")
 
         # 3. Load and merge all CSV files from data directory
-        print("📂 Loading and merging all CSV files...")
+        logger.info("📂 Loading and merging all CSV files...")
         merged_df = load_and_merge_csv_files()
 
         if merged_df.empty:
-            print("❌ No CSV files found to merge")
+            logger.error("❌ No CSV files found to merge")
             return
 
-        print(f"📋 Merged DataFrame shape: {merged_df.shape}")
+        logger.info(f"📋 Merged DataFrame shape: {merged_df.shape}")
 
         # 4. Generate convergence plot
-        print("📈 Generating convergence plot...")
+        logger.info("📈 Generating convergence plot...")
 
         # Add convergence metrics - use 'cost_total' column as that's what's available
         df_with_cma = BenchmarkCalculator.add_convergence_metrics(
@@ -62,7 +101,7 @@ def main():
         # Generate plot with descriptive name
         plot_path = os.path.join(visualizer.output_dir, "cost_convergence_results.png")
         visualizer.plot_cost_convergence(df_with_cma, plot_path)
-        print(f"✅ Convergence plot saved to: {plot_path}")
+        logger.info(f"✅ Convergence plot saved to: {plot_path}")
 
         # Generate task-specific plots if task_name column exists
         if "task_name" in merged_df.columns:
@@ -76,24 +115,26 @@ def main():
                         visualizer.output_dir, f"cost_convergence_{task_name}.png"
                     )
                     visualizer.plot_cost_convergence(task_cma, task_plot_path)
-                    print(f"✅ Task-specific plot saved to: {task_plot_path}")
+                    logger.info(f"✅ Task-specific plot saved to: {task_plot_path}")
 
         # Generate summary
-        print("\n📊 Summary:")
-        print(f"- Raw data: {csv_path}")
-        print(f"- Total records: {len(merged_df)}")
+        logger.info("\n📊 Summary:")
+        logger.info(f"- Raw data: {csv_path}")
+        logger.info(f"- Total records: {len(merged_df)}")
 
         if "task_name" in merged_df.columns:
-            print(f"- Task names: {merged_df['task_name'].unique()}")
+            logger.info(f"- Task names: {merged_df['task_name'].unique()}")
 
         if "cost_total" in merged_df.columns:
-            print(f"- Total cost: ${merged_df['cost_total'].sum():.6f}")
-            print(f"- Average cost per request: ${merged_df['cost_total'].mean():.6f}")
+            logger.info(f"- Total cost: ${merged_df['cost_total'].sum():.6f}")
+            logger.info(
+                f"- Average cost per request: ${merged_df['cost_total'].mean():.6f}"
+            )
 
-        print("\n🎉 Analytics pipeline completed successfully!")
+        logger.info("\n🎉 Analytics pipeline completed successfully!")
 
     except Exception as e:
-        print(f"❌ Error in analytics pipeline: {e}")
+        logger.error(f"❌ Error in analytics pipeline: {e}")
         sys.exit(1)
 
 

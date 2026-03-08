@@ -20,7 +20,7 @@ class TestAnalytics(unittest.TestCase):
         reason="Langfuse credentials not available",
     )
     @pytest.mark.capture_output
-    def test_main_integration(self):
+    def test_analytics(self):
         """Test main() method with real Langfuse data."""
         try:
             # Call main() directly - it will use its own logic

@@ -27,12 +27,6 @@ jobs:
           path: data-storage
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download Current Benchmark Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ai-benchmark-results-${{ inputs.app_version }}
-          path: data-storage/results/runs/${{ inputs.app_version }}
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -55,7 +49,7 @@ jobs:
         run: |
           if [ -n "$LANGFUSE_SECRET_KEY" ]; then
             cd main-repo/scripts/langfuse_analytics
-            python main.py --tag "${{ inputs.app_version }}"
+            python main.py --app-version "${{ inputs.app_version }}"
           fi
 
       - name: Commit and Push
