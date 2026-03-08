@@ -1,4 +1,4 @@
-name: "DEV: Trigger Main with Mock"
+name: "DEV: Test Present Benchmark Result"
 on: 
   workflow_dispatch:
     inputs:
@@ -8,8 +8,8 @@ on:
         default: 'v0.0.0-test'
 
 jobs:
-  run-main-logic:
-    uses: ./.github/workflows/benchmark-data-processing.yml
+  run-present-benchmark-result:
+    uses: ./.github/workflows/present-benchmark-result.yml
     with:
       app_version: ${{ github.event.inputs.test_version }}
     secrets: inherit
