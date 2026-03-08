@@ -72,7 +72,7 @@ class LangfuseDataClient:
                 response = self.client.api.observations_v_2.get_many(
                     type="GENERATION",
                     limit=100,  # Increased limit for better efficiency
-                    app_version=app_version,
+                    version=app_version,
                     fields="core,basic,usage,metadata",
                     expand_metadata="attributes",
                 )

@@ -20,7 +20,7 @@ MARKER_FILTER ?= -m "not integration"
 
 test-analytics:
 	@echo "Running tests..."
-	$(PYTHON) -m pytest tests/ $(MARKER_FILTER) $(ARGS)
+	$(PYTHON) -m pytest tests/ $(MARKER_FILTER) $(ARGS) -s
 
 clean:
 	@echo "Cleaning environment..."
