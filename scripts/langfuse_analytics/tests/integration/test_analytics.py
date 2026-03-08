@@ -26,7 +26,7 @@ class TestAnalytics(unittest.TestCase):
         try:
             # Mock sys.argv to include the required --app-version argument
             original_argv = sys.argv
-            sys.argv = ["main.py", "--app-version", "benchmark-dev-2"]
+            sys.argv = ["main.py", "--app-version", os.getenv("TEST_APP_VERSION")]
 
             # Call main() directly - it will use its own logic
             main()

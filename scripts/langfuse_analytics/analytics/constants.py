@@ -15,7 +15,7 @@ class ExpectedColumns(Enum):
     TRACE_ID = "trace_id"
     TIMESTAMP = "timestamp"
     TASK_NAME = "task_name"
-    VERSION = "version"
+    APP_VERSION = "app_version"
 
     # Usage details
     INPUT_TOKENS = "input_tokens"
@@ -38,7 +38,7 @@ EXPECTED_COLUMNS: FrozenSet[str] = frozenset(
         ExpectedColumns.TRACE_ID.value,
         ExpectedColumns.TIMESTAMP.value,
         ExpectedColumns.TASK_NAME.value,
-        ExpectedColumns.VERSION.value,
+        ExpectedColumns.APP_VERSION.value,
         ExpectedColumns.INPUT_TOKENS.value,
         ExpectedColumns.INSTRUCTION_TOKENS.value,
         ExpectedColumns.OUTPUT_TOKENS.value,
@@ -56,7 +56,7 @@ REQUIRED_COLUMNS: FrozenSet[str] = frozenset(
     [
         ExpectedColumns.ID.value,
         ExpectedColumns.TIMESTAMP.value,
-        ExpectedColumns.VERSION.value,
+        ExpectedColumns.APP_VERSION.value,
     ]
 )
 

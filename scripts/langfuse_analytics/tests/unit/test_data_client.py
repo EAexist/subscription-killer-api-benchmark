@@ -2,7 +2,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from analytics.data_client import LangfuseDataClient
+from analytics.langfuse_client import LangfuseDataClient
 
 
 class TestLangfuseDataClient(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestLangfuseDataClient(unittest.TestCase):
             LangfuseDataClient()
         self.assertEqual(cm.exception.code, 1)
 
-    @patch("analytics.data_client.Langfuse")
+    @patch("analytics.langfuse_client.Langfuse")
     def test_fetch_benchmark_generations_success(self, mock_langfuse):
         """Test fetching generations with a mock Langfuse client."""
         mock_client = MagicMock()
@@ -40,7 +40,7 @@ class TestLangfuseDataClient(unittest.TestCase):
         self.assertEqual(len(generations), 2)
         mock_client.api.observations_v_2.get_many.assert_called_once()
 
-    @patch("analytics.data_client.Langfuse")
+    @patch("analytics.langfuse_client.Langfuse")
     def test_fetch_benchmark_generations_empty(self, mock_langfuse):
         """Test fetching when no generations are found."""
         mock_client = MagicMock()
@@ -77,7 +77,7 @@ class TestLangfuseDataClient(unittest.TestCase):
                 "total": 150,
             },
             "costDetails": {"input": 0.0001, "output": 0.00005, "total": 0.00015},
-            "version": "test-version",
+            "app_version": "test-version",
             "task_name": "test_task",
         }
 
@@ -96,7 +96,7 @@ class TestLangfuseDataClient(unittest.TestCase):
         self.assertEqual(df.iloc[0]["cost_input"], 0.0001)
         self.assertEqual(df.iloc[0]["cost_output"], 0.00005)
         self.assertEqual(df.iloc[0]["cost_total"], 0.00015)
-        self.assertEqual(df.iloc[0]["version"], "test-version")
+        self.assertEqual(df.iloc[0]["app_version"], "test-version")
         self.assertEqual(df.iloc[0]["task_name"], "test_task")
 
     # @pytest.mark.skipif(

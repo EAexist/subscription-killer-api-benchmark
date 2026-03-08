@@ -4,13 +4,20 @@ Langfuse Data Client for fetching benchmark data from Langfuse.
 """
 
 import logging
-import os
 import sys
 import time
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from langfuse import Langfuse
+
+from .config import (
+    DEFAULT_INITIAL_DELAY,
+    DEFAULT_RETRY_COUNT,
+    LANGFUSE_HOST,
+    LANGFUSE_PUBLIC_KEY,
+    LANGFUSE_SECRET_KEY,
+)
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -21,16 +28,12 @@ logger = logging.getLogger(__name__)
 class LangfuseDataClient:
     """Client for fetching and processing Langfuse benchmark data."""
 
-    def __init__(
-        self,
-        secret_key: Optional[str] = None,
-        public_key: Optional[str] = None,
-        host: Optional[str] = None,
-    ):
-        """Initialize Langfuse client with credentials."""
-        self.secret_key = secret_key or os.getenv("LANGFUSE_SECRET_KEY")
-        self.public_key = public_key or os.getenv("LANGFUSE_PUBLIC_KEY")
-        self.host = host or os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+    def __init__(self):
+        """Initialize Langfuse client with credentials from unified config."""
+        # Use config values directly, no fallbacks
+        self.secret_key = LANGFUSE_SECRET_KEY
+        self.public_key = LANGFUSE_PUBLIC_KEY
+        self.host = LANGFUSE_HOST
 
         self._validate_credentials()
         self.client = Langfuse(
@@ -39,8 +42,11 @@ class LangfuseDataClient:
 
     def _validate_credentials(self):
         """Validate that required credentials are available."""
-        required_vars = ["LANGFUSE_SECRET_KEY", "LANGFUSE_PUBLIC_KEY"]
-        missing_vars = [var for var in required_vars if not os.getenv(var)]
+        missing_vars = []
+        if not self.secret_key:
+            missing_vars.append("LANGFUSE_SECRET_KEY")
+        if not self.public_key:
+            missing_vars.append("LANGFUSE_PUBLIC_KEY")
 
         if missing_vars:
             print(
@@ -53,8 +59,8 @@ class LangfuseDataClient:
         self,
         app_version: str,
         expected_count: Optional[int] = None,
-        max_retries: int = 5,
-        initial_delay: int = 30,
+        max_retries: int = DEFAULT_RETRY_COUNT,
+        initial_delay: int = DEFAULT_INITIAL_DELAY,
     ) -> List[Dict[str, Any]]:
         """
         Fetch generations with retry logic to handle Langfuse cloud delays.
@@ -65,7 +71,7 @@ class LangfuseDataClient:
             max_retries: Maximum number of retry attempts
             initial_delay: Initial delay in seconds (will increase exponentially)
         """
-        logger.info(f"📊 Fetching generations for tag: {app_version}...")
+        logger.info(f"📊 Fetching generations for version: {app_version}...")
 
         for attempt in range(max_retries):
             try:
@@ -130,7 +136,10 @@ class LangfuseDataClient:
         if not generations:
             return pd.DataFrame()
 
+        logger.debug(f"✅ generations[0]:\n{generations[0]}")
+
         data = []
+
         for gen in generations:
             try:
                 # Extract usage details
@@ -153,7 +162,7 @@ class LangfuseDataClient:
                         "id": gen.get("id"),
                         "trace_id": gen.get("traceId"),
                         "timestamp": gen.get("startTime"),
-                        "task_name": gen.get("task_name", {}),
+                        "task_name": gen.get("metadata", {}).get("task_name", ""),
                         # Usage details
                         "input_tokens": input_tokens,
                         "instruction_tokens": instruction_tokens,
@@ -165,7 +174,7 @@ class LangfuseDataClient:
                         "cost_input": cost_input,
                         "cost_output": cost_output,
                         "cost_total": cost_total,
-                        "app_version": gen.get("app_version", "Unknown"),
+                        "app_version": gen.get("version", "Unknown"),
                     }
                 )
             except Exception as e:

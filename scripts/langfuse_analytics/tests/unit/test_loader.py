@@ -32,7 +32,7 @@ class TestLoader(unittest.TestCase):
         return {
             "id": [1, 2],
             "timestamp": ["2023-01-01T10:00:00", "2023-01-01T11:00:00"],
-            "version": ["v1", "v1"],
+            "app_version": ["v1", "v1"],
             "trace_id": ["trace1", "trace2"],
             "task_name": ["task1", "task2"],
             "input_tokens": [10, 15],
@@ -52,7 +52,7 @@ class TestLoader(unittest.TestCase):
         return {
             "id": [3, 4],
             "timestamp": ["2023-01-01T12:00:00", "2023-01-01T13:00:00"],
-            "version": ["v2", "v2"],
+            "app_version": ["v2", "v2"],
             "trace_id": ["trace3", "trace4"],
             "task_name": ["task3", "task4"],
             "input_tokens": [20, 25],
@@ -88,7 +88,7 @@ class TestLoader(unittest.TestCase):
         # Verify data integrity
         self.assertEqual(list(saved_df.columns), list(df.columns))
         self.assertEqual(saved_df["id"].tolist(), [1, 2])
-        self.assertEqual(saved_df["version"].tolist(), ["v1", "v1"])
+        self.assertEqual(saved_df["app_version"].tolist(), ["v1", "v1"])
         self.assertEqual(saved_df["cost_total"].tolist(), [0.0018, 0.0027])
 
         # Clean up created file
@@ -146,12 +146,12 @@ class TestLoader(unittest.TestCase):
             self.assertEqual(len(result), 4)  # 2 rows from each file
             self.assertIn("id", result.columns)
             self.assertIn("timestamp", result.columns)
-            self.assertIn("version", result.columns)
+            self.assertIn("app_version", result.columns)
             self.assertIn("cost_total", result.columns)
 
             # Verify data integrity
             self.assertEqual(result["id"].tolist(), [1, 2, 3, 4])
-            self.assertEqual(result["version"].tolist(), ["v1", "v1", "v2", "v2"])
+            self.assertEqual(result["app_version"].tolist(), ["v1", "v1", "v2", "v2"])
 
     def test_load_and_merge_csv_files_with_mixed_files(self):
         """Test load_and_merge_csv_files with CSV and non-CSV files."""

@@ -29,6 +29,8 @@ MAX_REQUEST_INDEX_TICKS = 5
 
 # API endpoints and secrets
 LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
 
 
 # Ensure directories exist when imported

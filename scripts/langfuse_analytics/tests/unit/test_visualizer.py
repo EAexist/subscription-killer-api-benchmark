@@ -27,7 +27,7 @@ class TestBenchmarkVisualizer(unittest.TestCase):
         data = {
             "timestamp": pd.date_range("2023-01-01", periods=4, freq="h"),
             "total_cost": [0.1, 0.08, 0.06, 0.05],
-            "version": ["v1", "v1", "v2", "v2"],
+            "app_version": ["v1", "v1", "v2", "v2"],
             "trace_id": ["trace1", "trace2", "trace3", "trace4"],
         }
         df = pd.DataFrame(data)
@@ -49,17 +49,17 @@ class TestBenchmarkVisualizer(unittest.TestCase):
         expected_cma_v1 = [0.1, 0.09]  # (0.1)/1, (0.1+0.08)/2
         expected_cma_v2 = [0.06, 0.055]  # (0.06)/1, (0.06+0.05)/2
 
-        v1_data = df_with_cma[df_with_cma["version"] == "v1"]
-        v2_data = df_with_cma[df_with_cma["version"] == "v2"]
+        v1_data = df_with_cma[df_with_cma["app_version"] == "v1"]
+        v2_data = df_with_cma[df_with_cma["app_version"] == "v2"]
 
         print("\n=== CMA Calculations ===")
-        print("v1 CMA values:", list(v1_data["cma_cost"]))
+        print("v1 CMA values:", list(v1_data["amortized_cost"]))
         print("v1 expected:", expected_cma_v1)
-        print("v2 CMA values:", list(v2_data["cma_cost"]))
+        print("v2 CMA values:", list(v2_data["amortized_cost"]))
         print("v2 expected:", expected_cma_v2)
 
-        self.assertEqual(list(v1_data["cma_cost"]), expected_cma_v1)
-        self.assertEqual(list(v2_data["cma_cost"]), expected_cma_v2)
+        self.assertEqual(list(v1_data["amortized_cost"]), expected_cma_v1)
+        self.assertEqual(list(v2_data["amortized_cost"]), expected_cma_v2)
 
         # Verify the file was actually created
         self.assertTrue(os.path.exists(output_path))

@@ -8,6 +8,8 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from .config import PLOTS_DIR
+
 
 class BenchmarkVisualizer:
     """Visualizer for creating plots and reports from benchmark data."""
@@ -15,11 +17,8 @@ class BenchmarkVisualizer:
     def __init__(self, output_dir: str = None):
         """Initialize visualizer with output directory."""
         if output_dir is None:
-            # Default to the new data-storage structure
-            project_root = os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            )
-            output_dir = os.path.join(project_root, "data-storage", "results", "plots")
+            # Use the centralized config for plots directory
+            output_dir = PLOTS_DIR
 
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
@@ -34,7 +33,7 @@ class BenchmarkVisualizer:
         """
         Plot cost convergence data.
 
-        Expects a DataFrame with: ['request_index', 'cma_cost', 'version']
+        Expects a DataFrame with: ['request_index', 'amortized_cost', 'version']
 
         Args:
             df_subset: DataFrame with trace data
@@ -44,11 +43,13 @@ class BenchmarkVisualizer:
         plt.figure(figsize=(12, 8))
 
         # Simple Plotting Logic
-        for impl in df_subset["version"].unique():
-            data = df_subset[df_subset["version"] == impl]
+        for impl in df_subset["app_version"].unique():
+            data = df_subset[df_subset["app_version"] == impl]
+            # Convert cost to $ per thousand requests
+            cost_per_thousand = data["amortized_cost"] * 1_000
             plt.plot(
                 data["request_index"],
-                data["cma_cost"],
+                cost_per_thousand,
                 label=impl,
                 linewidth=2.5,
                 marker="o",
@@ -56,9 +57,13 @@ class BenchmarkVisualizer:
                 alpha=0.8,
             )
 
-        plt.title("Amortized Cost", fontsize=16, fontweight="bold")
+        plt.title(
+            "Amortized AI Operational Cost per Request", fontsize=16, fontweight="bold"
+        )
         plt.xlabel("Request", fontsize=12)
-        plt.ylabel("Amortized Cost per Request", fontsize=12)
+        plt.ylabel(
+            "Amortized AI Cost per Request ($ per thousand requests)", fontsize=12
+        )
         plt.legend(fontsize=10)
         plt.grid(True, alpha=0.3)
 

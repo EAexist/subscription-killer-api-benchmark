@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 from analytics.calculator import BenchmarkCalculator
-from analytics.data_client import LangfuseDataClient
+from analytics.langfuse_client import LangfuseDataClient
 from analytics.loader import load_and_merge_csv_files, save_raw_data
 from analytics.visualizer import BenchmarkVisualizer
 
@@ -74,7 +74,10 @@ def main():
         # 1. Fetch data from Langfuse
         logger.info("📊 Fetching data from Langfuse...")
         # Fetch without expected count for now (can be added later if needed)
-        generations = client.fetch_benchmark_generations(app_version)
+        generations = client.fetch_benchmark_generations(
+            app_version=app_version,
+            expected_count=os.getenv("AI_BENCHMARK_K6_ITERATIONS", None),
+        )
 
         if not generations:
             logger.error("❌ No data found in Langfuse")
@@ -109,7 +112,9 @@ def main():
         )
 
         # Generate plot with descriptive name
-        plot_path = os.path.join(visualizer.output_dir, "cost_convergence_results.png")
+        plot_path = os.path.join(
+            visualizer.output_dir, f"amortized_ai_cost_{app_version}.png"
+        )
         visualizer.plot_cost_convergence(df_with_cma, plot_path)
         logger.info(f"✅ Convergence plot saved to: {plot_path}")
 
@@ -122,7 +127,8 @@ def main():
                         task_df, "cost_total"
                     )
                     task_plot_path = os.path.join(
-                        visualizer.output_dir, f"cost_convergence_{task_name}.png"
+                        visualizer.output_dir,
+                        f"amortized_ai_cost_{task_name}_{app_version}.png",
                     )
                     visualizer.plot_cost_convergence(task_cma, task_plot_path)
                     logger.info(f"✅ Task-specific plot saved to: {task_plot_path}")
