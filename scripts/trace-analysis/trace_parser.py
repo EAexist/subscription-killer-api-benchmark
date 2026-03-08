@@ -5,9 +5,7 @@ Handles parsing and extraction of data from Zipkin trace files.
 """
 
 import json
-import os
 from typing import List, Dict, Any, Optional
-from pathlib import Path
 
 
 class TraceParser:

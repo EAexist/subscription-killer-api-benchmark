@@ -1,0 +1,15 @@
+name: "DEV: Trigger Main with Mock"
+on: 
+  workflow_dispatch:
+    inputs:
+      test_version:
+        description: 'Version you just mocked'
+        required: true
+        default: 'v0.0.0-test'
+
+jobs:
+  run-main-logic:
+    uses: ./.github/workflows/benchmark-data-processing.yml
+    with:
+      app_version: ${{ github.event.inputs.test_version }}
+    secrets: inherit

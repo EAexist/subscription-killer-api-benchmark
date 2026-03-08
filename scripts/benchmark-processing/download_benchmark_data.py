@@ -9,8 +9,6 @@ import os
 import sys
 import requests
 from pathlib import Path
-import zipfile
-import tempfile
 
 def download_file_from_github(repo_owner, repo_name, release_tag, file_name, output_dir):
     """Download a specific file from GitHub release."""

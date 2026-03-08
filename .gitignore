@@ -36,3 +36,33 @@ Thumbs.db
 results/ai-benchmark/*
 !results/ai-benchmark/example-tag-v0.0.0-example.1
 results/reports
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+.codeiumignore
+
+# Hugging Face mirror
+scripts/gmail_mock_server/dataset
+
+*deprecated*

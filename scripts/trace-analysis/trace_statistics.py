@@ -5,8 +5,7 @@ Handles statistical analysis of trace data.
 """
 
 import statistics
-from typing import List, Dict, Any, Optional, Tuple
-import math
+from typing import List, Dict, Any
 
 
 class TraceStatistics:

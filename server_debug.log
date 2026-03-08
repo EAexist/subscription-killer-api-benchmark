@@ -1,0 +1,16 @@
+INFO:     Started server process [18044]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8080): [winerror 10048] 각 소켓 주소(프로토콜/네트워크 주소/포트)는 하나만 사용할 수 있습니다
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+✅ Loaded 6 items from datasets repo truth data
+✅ Processed 6 Gmail messages
+🔧 Configuration:
+   Data file path: C:/Users/hyeon/workspace/subscription-killer-platform/subscription-killer-benchmark/scripts/gmail_mock_server/dataset/data/emails/versions/local_20260303_014415/samples.jsonl
+📊 Distribution Statistics:
+   total_messages: 6
+   reINFO:     127.0.0.1:63709 - "POST /messages/batch-get HTTP/1.1" 200 OK
+
+   chunk_size: 50
+✅ AppState initialization completed successfully

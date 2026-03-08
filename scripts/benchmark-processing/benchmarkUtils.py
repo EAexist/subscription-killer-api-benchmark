@@ -7,17 +7,19 @@ Modularized version using separate modules for different responsibilities.
 
 import os
 import sys
-from typing import Dict, List
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import modularized components
-from dataUtils import load_all_commit_data
-from csvUtils import (
+from utils.dataUtils import load_all_commit_data
+from utils.csvUtils import (
     parse_existing_csv, 
     update_csv_with_new_column,
     AI_METRICS,
     SUPPLEMENTARY_METRICS
 )
-from markdownUtils import convert_csv_to_markdown
+from benchmark_processing.markdownUtils import convert_csv_to_markdown
 
 
 def main():

@@ -7,7 +7,6 @@ Analyzes Zipkin trace data to extract individual request timings and generate pr
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
 
 # Import modularized components
 from trace_parser import TraceParser

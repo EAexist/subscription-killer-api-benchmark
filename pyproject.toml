@@ -1,0 +1,12 @@
+[tool.pyright]
+include = ["scripts/gmail_mock_server", "scripts/langfuse_analytics"]
+extraPaths = ["scripts/gmail_mock_server", "scripts/gmail_mock_server/dataset/src", "scripts/gmail_mock_server/dataset/tests"] 
+
+# Add virtual environment path for IDE
+venvPath = "."
+venv = ".venv"
+
+executionEnvironments = [
+  { root = "scripts/gmail_mock_server"},
+  { root = "scripts/langfuse_analytics"},
+]
