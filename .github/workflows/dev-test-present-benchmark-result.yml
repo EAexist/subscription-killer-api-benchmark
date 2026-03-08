@@ -3,7 +3,7 @@ name: "DEV: Mock and Test Benchmark Result"
 on: 
   workflow_dispatch:
     inputs:
-      version:
+      mock_version:
         description: 'Version tag to mock and test'
         required: true
         default: 'v0.0.0-test'
