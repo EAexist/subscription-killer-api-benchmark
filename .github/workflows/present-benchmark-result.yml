@@ -48,8 +48,12 @@ jobs:
           DATA_STORAGE_ROOT: ${{ github.workspace }}/data-storage
         run: |
           if [ -n "$LANGFUSE_SECRET_KEY" ]; then
+            echo " Langfuse credentials found. Running analytics pipeline..."
             cd main-repo/scripts/langfuse_analytics
             python main.py --app-version "${{ inputs.app_version }}"
+          else
+            echo " LANGFUSE_SECRET_KEY not found. Skipping analytics pipeline."
+            echo "Please set LANGFUSE_SECRET_KEY and LANGFUSE_PUBLIC_KEY secrets in your repository settings."
           fi
 
       - name: Commit and Push
