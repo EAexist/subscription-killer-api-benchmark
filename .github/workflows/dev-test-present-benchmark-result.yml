@@ -42,5 +42,5 @@ jobs:
     needs: upload-mock # Ensures the artifact exists before the next job starts
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
-      app_version: ${{ github.event.inputs.version }}
+      app_version: ${{ inputs.mock_version }}
     secrets: inherit
