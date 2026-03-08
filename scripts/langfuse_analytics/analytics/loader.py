@@ -13,14 +13,14 @@ from .constants import EXPECTED_COLUMNS, REQUIRED_COLUMNS
 
 def save_raw_data(
     df: pd.DataFrame,
-    version: str,
+    app_version: str,
 ) -> str:
     """Save raw DataFrame as CSV for further analysis."""
     # Use proper naming convention from config
     from datetime import datetime
 
     date_str = datetime.now().strftime("%Y%m%d")
-    filename = CSV_NAMING_PATTERN.format(version=version, date=date_str)
+    filename = CSV_NAMING_PATTERN.format(version=app_version, date=date_str)
     csv_path = RAW_DATA_DIR / filename
     os.makedirs(RAW_DATA_DIR, exist_ok=True)
     df.to_csv(csv_path, index=False)

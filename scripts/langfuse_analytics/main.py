@@ -30,15 +30,25 @@ def setup_logging(app_version: str):
     log_filename = f"analytics_{app_version}_{timestamp}.log"
     log_filepath = os.path.join(logs_dir, log_filename)
 
+    # Clear any existing handlers to avoid duplicate logging
+    logger = logging.getLogger()
+    logger.handlers.clear()
+
     # Setup logging configuration
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[logging.FileHandler(log_filepath), logging.StreamHandler(sys.stdout)],
+        force=True,  # Force reconfiguration
     )
 
     logger = logging.getLogger(__name__)
     logger.info(f"Logging to file: {log_filepath}")
+
+    # Test write to ensure file is working
+    with open(log_filepath, "w") as f:
+        f.write(f"Log started at {datetime.now()}\n")
+
     return logger
 
 
@@ -78,7 +88,7 @@ def main():
 
         # 2. Save raw data as CSV
         logger.info("💾 Saving raw data...")
-        csv_path = save_raw_data(df, "benchmark")
+        csv_path = save_raw_data(df, app_version)
 
         # 3. Load and merge all CSV files from data directory
         logger.info("📂 Loading and merging all CSV files...")
@@ -133,8 +143,15 @@ def main():
 
         logger.info("\n🎉 Analytics pipeline completed successfully!")
 
+        # Flush all logging handlers to ensure logs are written
+        for handler in logging.getLogger().handlers:
+            handler.flush()
+
     except Exception as e:
         logger.error(f"❌ Error in analytics pipeline: {e}")
+        # Flush all logging handlers even on error
+        for handler in logging.getLogger().handlers:
+            handler.flush()
         sys.exit(1)
 
 

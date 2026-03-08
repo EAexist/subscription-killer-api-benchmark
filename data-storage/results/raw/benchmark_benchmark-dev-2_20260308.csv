@@ -1,0 +1,3 @@
+id,trace_id,timestamp,task_name,input_tokens,instruction_tokens,output_tokens,input_tokens_per_item,output_tokens_per_item,total_tokens,cost_input,cost_output,cost_total,app_version
+571627906983f894,43cca32edac40005b12e381aec7b492d,2026-03-07 07:37:21.800000+00:00,{},314,243,13,0,0,327,0.000157,3.9e-05,0.000196,Unknown
+801667ed56ed2afd,24440cf48b28f7b826821216786222f1,2026-03-07 07:37:22.908000+00:00,{},298,243,13,0,0,311,0.000149,3.9e-05,0.000188,Unknown

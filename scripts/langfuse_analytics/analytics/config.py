@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 # Base directory detection
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 DATA_STORAGE_ROOT = Path(
     os.getenv("DATA_STORAGE_ROOT", str(PROJECT_ROOT / "data-storage"))
 )

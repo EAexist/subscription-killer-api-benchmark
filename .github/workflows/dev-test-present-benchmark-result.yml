@@ -6,7 +6,7 @@ on:
       mock_version:
         description: 'Version tag to mock and test'
         required: true
-        default: 'v0.0.0-test'
+        default: 'v0.0.0-test.0'
 
 jobs:
   run-present-benchmark-result:
