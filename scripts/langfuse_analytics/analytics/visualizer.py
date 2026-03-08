@@ -56,9 +56,9 @@ class BenchmarkVisualizer:
                 alpha=0.8,
             )
 
-        plt.title("Cost Convergence Plot", fontsize=16, fontweight="bold")
+        plt.title("Amortized Cost", fontsize=16, fontweight="bold")
         plt.xlabel("Request", fontsize=12)
-        plt.ylabel("Cumulative Average Cost", fontsize=12)
+        plt.ylabel("Amortized Cost per Request", fontsize=12)
         plt.legend(fontsize=10)
         plt.grid(True, alpha=0.3)
 
@@ -67,15 +67,6 @@ class BenchmarkVisualizer:
         plt.xlim(0, max_request_index)
         tick_positions = range(0, int(max_request_index) + 1, 5)
         plt.xticks(tick_positions)
-
-        # Add reference lines for better interpretation
-        plt.axhline(
-            y=df_subset["cma_cost"].mean(),
-            color="red",
-            linestyle="--",
-            alpha=0.5,
-            label="Overall Average",
-        )
 
         plt.tight_layout()
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
