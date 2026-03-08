@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DATA_BRANCH }}
-          path: data-storage
+          path: data-repo
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
@@ -44,8 +44,7 @@ jobs:
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
-          # Pass the paths as environment variables so Python knows where to find/save
-          DATA_STORAGE_ROOT: ${{ github.workspace }}/data-storage
+          DATA_STORAGE_ROOT: ${{ github.workspace }}/data-repo/data-storage
         run: |
           if [ -n "$LANGFUSE_SECRET_KEY" ]; then
             echo " Langfuse credentials found. Running analytics pipeline..."
@@ -58,7 +57,7 @@ jobs:
 
       - name: Commit and Push
         # TODO: change to data when ready
-        working-directory: data-storage
+        working-directory: data-repo
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
