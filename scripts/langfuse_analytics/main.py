@@ -15,42 +15,43 @@ from analytics.langfuse_client import LangfuseDataClient
 from analytics.loader import load_and_merge_csv_files, save_raw_data
 from analytics.visualizer import BenchmarkVisualizer
 
-
 def setup_logging(app_version: str):
-    """Setup logging to both console and file."""
-    # Use DATA_STORAGE_ROOT environment variable if available, otherwise default path
+    """Setup logging to both console and file with UTF-8 support."""
     data_storage_root = os.getenv(
         "DATA_STORAGE_ROOT", os.path.join(os.getcwd(), "..", "..", "data-storage")
     )
     logs_dir = os.path.join(data_storage_root, "logs")
     os.makedirs(logs_dir, exist_ok=True)
 
-    # Create log filename with app_version and timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = f"analytics_{app_version}_{timestamp}.log"
     log_filepath = os.path.join(logs_dir, log_filename)
 
-    # Clear any existing handlers to avoid duplicate logging
     logger = logging.getLogger()
     logger.handlers.clear()
 
-    # Setup logging configuration
+    # 1. Explicitly set UTF-8 for the file handler
+    file_handler = logging.FileHandler(log_filepath, encoding="utf-8")
+    
+    # 2. Use sys.stdout for console and handle potential encoding issues
+    stream_handler = logging.StreamHandler(sys.stdout)
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler(log_filepath), logging.StreamHandler(sys.stdout)],
-        force=True,  # Force reconfiguration
+        handlers=[file_handler, stream_handler],
+        force=True,
     )
+
+    # 3. Test write using UTF-8 to ensure emojis like ✅ work
+    with open(log_filepath, "a", encoding="utf-8") as f:
+        f.write(f"Log started at {datetime.now()} 🚀\n")
 
     logger = logging.getLogger(__name__)
     logger.info(f"Logging to file: {log_filepath}")
 
-    # Test write to ensure file is working
-    with open(log_filepath, "w") as f:
-        f.write(f"Log started at {datetime.now()}\n")
-
     return logger
-
+    
 
 def main():
     """Main analytics pipeline."""

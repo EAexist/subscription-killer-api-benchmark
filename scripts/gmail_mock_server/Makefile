@@ -26,3 +26,7 @@ clean:
 	@echo "Cleaning environment..."
 	rm -rf $(VENV)
 	find . -type d -name "__pycache__" -exec rm -rf {} +
+
+sync-dataset:
+	@echo "Syncing dataset..."
+	$(PYTHON) -m pip install --force-reinstall git+https://huggingface.co/datasets/hyeon-expression/subscription-killer-synthetic-emails.git

@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 # Add the datasets path to Python path
 sys.path.insert(
@@ -10,40 +10,12 @@ sys.path.insert(
     os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "datasets", "src"),
 )
 
-from config import settings
 from datasets_shared.schema.models import RawGmailMessage
 from models import GmailMessage
 
 
 class DataProcessor:
     """Utility class for processing raw data into GmailMessage objects."""
-
-    @staticmethod
-    def _generate_sample_data(count: Optional[int] = None) -> List[Dict[str, Any]]:
-        """
-        Generate sample data for testing when real data is not available.
-
-        Args:
-            count: Number of sample messages to generate (uses config default if None)
-
-        Returns:
-            List of sample data dictionaries
-        """
-        if count is None:
-            count = settings.n_emails_per_request
-
-        categories = ["subscription", "newsletter", "notification"]
-        return [
-            {
-                "id": f"msg_{i}",
-                "category": categories[i % len(categories)],
-                "subject": f"Sample message {i}",
-                "content": f"Content {i}",
-                "sender_name": f"Sender {i}",
-                "sender_email": f"sender{i}@example.com",
-            }
-            for i in range(count)
-        ]
 
     @staticmethod
     def convert_to_gmail_messages(

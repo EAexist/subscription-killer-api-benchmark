@@ -12,21 +12,18 @@ dependencies = [
     "pydantic>=2.0.0",
     "pytest>=7.0.0",
     "python-dotenv>=1.0.0",
-    "huggingface_hub>=0.19.0",
-]
-
-[tool.setuptools.packages.find]
-where = ["."]
-# Ensure both the app and the mirrored dataset are treated as packages
-include = ["app*", "dataset*"]
-
-[tool.pyright]
-extraPaths = ["dataset/src", "dataset/tests"]
-executionEnvironments = [
-  { root = "." },
-  { root = "dataset", extraPaths = ["src","tests"] }
+    "huggingface_hub>=1.6.0",
+    "datasets>=4.6.1",
+    "datasets-shared @ git+https://huggingface.co/datasets/hyeon-expression/subscription-killer-synthetic-emails.git",
 ]
 
 [tool.setuptools]
-# Ensures the dataset folder is recognized during 'pip install .'
-package-dir = {"" = "."}
+packages = ["gmail_mock_server"]
+
+[tool.setuptools.package-dir]
+"" = "."
+
+[tool.pyright]
+reportMissingImports = true
+typeCheckingMode = "basic"
+extraPaths = ["."] 

@@ -1,11 +1,13 @@
-from typing import Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
+import json
+import os
 
-from config import settings
-from datasets_shared.loader.loader import Loader
 from datasets_shared.schema.models import Sample
 from models import GmailMessage
 from services.message_selector import MessageSelector
 from utils.data_utils import DataProcessor, MessageUtils
+from huggingface_hub import hf_hub_download
+from datasets import load_dataset
 
 
 class AppState:
@@ -33,8 +35,7 @@ class AppState:
 
         try:
             # Load datasets repo truth data
-            loader = Loader()
-            self.samples = loader.load_latest_samples()
+            self.samples = self._load_latest_samples()
             print(f"✅ Loaded {len(self.samples)} items from datasets repo truth data")
 
             # Convert to GmailMessage format
@@ -56,7 +57,6 @@ class AppState:
 
             # Print configuration
             print("🔧 Configuration:")
-            print(f"   Data file path: {settings.data_file_path}")
 
             # Print distribution statistics
             stats = selector.get_distribution_stats()
@@ -70,6 +70,34 @@ class AppState:
         except Exception as e:
             print(f"❌ Failed to initialize AppState: {e}")
             raise
+
+    def _load_latest_samples(self)->List[Sample]:
+
+        REPO_ID = "hyeon-expression/subscription-killer-synthetic-emails"
+        EMAILS_LATEST_JSON_FILENAME = "data/emails/latest.json"
+
+        local_file_path = hf_hub_download(
+            repo_id=REPO_ID, 
+            filename=EMAILS_LATEST_JSON_FILENAME,
+            repo_type="dataset"
+        )
+
+        samples_path:str
+
+        with open(local_file_path, "r") as f:
+            data = json.loads(f.read())
+            samples_path = data["relative_path"] 
+        
+        samples_dataset = load_dataset(
+            REPO_ID,
+            data_files=f"data/emails/{samples_path}",
+            field=None,
+            split="train"
+        )
+        
+        samples = [Sample(**cast(dict[str, Any], item)) for item in samples_dataset]
+        
+        return samples
 
     def is_initialized(self) -> bool:
         """Check if the application state has been initialized."""

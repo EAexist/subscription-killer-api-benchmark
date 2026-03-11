@@ -14,17 +14,14 @@ from .config import PLOTS_DIR
 class BenchmarkVisualizer:
     """Visualizer for creating plots and reports from benchmark data."""
 
-    def __init__(self, output_dir: str = None):
+    def __init__(self):
         """Initialize visualizer with output directory."""
-        if output_dir is None:
-            # Use the centralized config for plots directory
-            output_dir = PLOTS_DIR
 
-        self.output_dir = output_dir
-        os.makedirs(output_dir, exist_ok=True)
+        self.output_dir = PLOTS_DIR
+        os.makedirs(self.output_dir, exist_ok=True)
 
-        # Set up matplotlib for better plots
-        plt.style.use("default")
+        plt.style.use("seaborn-v0_8-whitegrid")
+        plt.rcParams["figure.autolayout"] = True
         plt.rcParams["figure.figsize"] = (12, 8)
 
     def plot_cost_convergence(

@@ -75,7 +75,9 @@ async def list_message_ids(
         Comma-separated list of message IDs
     """
     # Use distribution-based selection with configured settings
-    selected_messages = app_state.message_selector.select_messages(count=2)
+    selected_messages = app_state.message_selector.select_messages(
+        count=settings.n_emails_per_request
+    )
 
     # Extract message IDs
     message_ids = MessageUtils.extract_message_ids(selected_messages)

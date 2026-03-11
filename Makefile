@@ -22,4 +22,11 @@ setup-analytics:
 	$(MAKE) -C scripts/langfuse_analytics setup
 
 test-analytics:
-	$(MAKE) -C scripts/langfuse_analytics test-analytics
+	$(MAKE) -C scripts/langfuse_analytics test
+
+# Gmail Mock Server
+setup-gmail-mock-server:
+	$(MAKE) -C scripts/gmail_mock_server setup
+
+test-gmail-mock-server:
+	$(MAKE) -C scripts/gmail_mock_server test

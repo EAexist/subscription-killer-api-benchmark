@@ -17,9 +17,10 @@ cleanup_port() {
 
 cleanup_port
 
+VENV_PYTHON="$MOCK_SERVER_DIR/.venv/Scripts/python.exe"
+
 echo "🚀 Starting server on 127.0.0.1:8081..."
-# Use python -m uvicorn so it uses the same environment as pytest
-cd "$MOCK_SERVER_DIR" && python -m uvicorn mock_server:app --host 127.0.0.1 --port 8081 &
+"$VENV_PYTHON" -m uvicorn mock_server:app --app-dir "$MOCK_SERVER_DIR" --host 127.0.0.1 --port 8081 &
 SERVER_PID=$!
 
 # Wait for server to be ready

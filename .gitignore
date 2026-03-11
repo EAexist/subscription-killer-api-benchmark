@@ -59,6 +59,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.venv/
 
 .codeiumignore
 
