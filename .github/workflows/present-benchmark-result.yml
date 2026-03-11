@@ -37,6 +37,9 @@ jobs:
       - name: Install Dependencies
         run: |
           cd main-repo/scripts/langfuse_analytics
+          python -m pip install --upgrade pip
+          # Explicitly upgrade langfuse to bypass stale cache issues
+          pip install --upgrade langfuse
           pip install -r requirements.txt
 
       - name: Run Langfuse Analytics
