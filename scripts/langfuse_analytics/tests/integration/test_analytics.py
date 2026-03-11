@@ -40,12 +40,14 @@ class TestAnalytics(unittest.TestCase):
 
         except SystemExit as e:
             # Restore original sys.argv even if SystemExit occurs
-            sys.argv = original_argv
+            if 'original_argv' in locals():
+                sys.argv = original_argv
             if e.code != 0:
                 self.fail(f"Main() exited with error code: {e.code}")
         except Exception as e:
             # Restore original sys.argv for any other exception
-            sys.argv = original_argv
+            if 'original_argv' in locals():
+                sys.argv = original_argv
             self.fail(f"Main() integration test failed: {e}")
 
 
