@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cd main-repo
+          cd main-repo/scripts/langfuse_analytics
           pip install -r requirements.txt
 
       - name: Run Langfuse Analytics
@@ -48,7 +48,6 @@ jobs:
         run: |
           if [ -n "$LANGFUSE_SECRET_KEY" ]; then
             echo " Langfuse credentials found. Running analytics pipeline..."
-            cd main-repo/scripts/langfuse_analytics
             python main.py --app-version "${{ inputs.app_version }}"
           else
             echo " LANGFUSE_SECRET_KEY not found. Skipping analytics pipeline."
