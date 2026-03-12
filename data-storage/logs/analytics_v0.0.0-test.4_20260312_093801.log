@@ -1,0 +1,16 @@
+Log started at 2026-03-12 09:38:01.560912 🚀
+2026-03-12 09:38:01,560 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/analytics_v0.0.0-test.4_20260312_093801.log
+2026-03-12 09:38:01,561 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.4
+2026-03-12 09:38:01,642 - INFO - 📊 Fetching data from Langfuse...
+2026-03-12 09:38:01,642 - INFO - 📊 Fetching generations for version: v0.0.0-test.4...
+2026-03-12 09:38:01,642 - ERROR - ❌ Error fetching from Langfuse (attempt 1): 'LangfuseAPI' object has no attribute 'observations_v_2'
+2026-03-12 09:38:01,642 - INFO - Retrying in 30s... (Attempt 1/5)
+2026-03-12 09:38:31,643 - ERROR - ❌ Error fetching from Langfuse (attempt 2): 'LangfuseAPI' object has no attribute 'observations_v_2'
+2026-03-12 09:38:31,643 - INFO - Retrying in 60s... (Attempt 2/5)
+2026-03-12 09:39:31,643 - ERROR - ❌ Error fetching from Langfuse (attempt 3): 'LangfuseAPI' object has no attribute 'observations_v_2'
+2026-03-12 09:39:31,643 - INFO - Retrying in 120s... (Attempt 3/5)
+2026-03-12 09:41:31,643 - ERROR - ❌ Error fetching from Langfuse (attempt 4): 'LangfuseAPI' object has no attribute 'observations_v_2'
+2026-03-12 09:41:31,644 - INFO - Retrying in 240s... (Attempt 4/5)
+2026-03-12 09:45:31,644 - ERROR - ❌ Error fetching from Langfuse (attempt 5): 'LangfuseAPI' object has no attribute 'observations_v_2'
+2026-03-12 09:45:31,644 - ERROR - ❌ Max retries reached. Returning empty list.
+2026-03-12 09:45:31,644 - ERROR - ❌ No data found in Langfuse
