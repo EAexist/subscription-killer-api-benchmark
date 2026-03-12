@@ -38,9 +38,14 @@ jobs:
         run: |
           cd main-repo/scripts/langfuse_analytics
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          # Explicitly upgrade langfuse to bypass stale cache issues
-          pip install --upgrade langfuse
+          # Clear previous installs and install fresh
+          pip install --force-reinstall -r requirements.txt
+          pip install --force-reinstall langfuse
+
+      - name: Debug Environment
+        run: |
+          pip show langfuse
+          python -c "from langfuse.api.client import LangfuseAPI; print(dir(LangfuseAPI))"
 
       - name: Run Langfuse Analytics
         env:
