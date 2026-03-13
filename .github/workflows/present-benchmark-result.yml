@@ -45,7 +45,7 @@ jobs:
       - name: Debug Environment
         run: |
           pip show langfuse
-          python -c "from langfuse.api.client import LangfuseAPI; print(dir(LangfuseAPI))"
+          python -c "from langfuse import Langfuse; print(dir(Langfuse))"
 
       - name: Run Langfuse Analytics
         env:
