@@ -1,0 +1,5 @@
+id,trace_id,timestamp,task_name,input_tokens,instruction_tokens,output_tokens,input_tokens_per_item,output_tokens_per_item,total_tokens,cost_input,cost_output,cost_total,app_version
+2fff028d88134416,f930eecc2a1a37985a71a1014feafc60,2026-03-08 10:06:51.345000+00:00,categorize_emails,295,243,13,26,0,308,0.0001475,3.9e-05,0.0001865,v0.0.0-test.0
+37890a69b93be7e9,131a53c09e120f7a3ee4c6dc756f73c4,2026-03-08 10:06:52.253000+00:00,categorize_emails,309,243,13,33,0,322,0.0001545,3.9e-05,0.0001935,v0.0.0-test.0
+22114caab88246f3,a72798ca179d73a6b13a7152a054c13b,2026-03-11 06:30:07.953000+00:00,categorize_emails,563,243,13,32,0,576,0.0002815,3.9e-05,0.0003205,v0.0.0-test.0
+85c77e9976354a03,a72798ca179d73a6b13a7152a054c13b,2026-03-11 06:30:08.017000+00:00,extract_email_templates,488,232,75,0,0,563,0.000244,0.000225,0.000469,v0.0.0-test.0
