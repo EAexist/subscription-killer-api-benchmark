@@ -1,7 +1,7 @@
 name: Benchmark Test
 
 on:
-  workflow_dispatch:
+  repository_dispatch:
     types: [new_ai_benchmark_build_test]
 
 jobs:
