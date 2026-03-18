@@ -7,7 +7,7 @@ COPY scripts/gmail_mock_server/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 2. Copy the dataset
-COPY scripts/gmail_mock_server/dataset ./dataset
+# COPY scripts/gmail_mock_server/dataset ./dataset
 
 # 3. Copy EVERYTHING from the project folder
 # This picks up models.py, config.py, state.py, mock_server.py, etc.
