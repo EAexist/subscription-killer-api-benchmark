@@ -40,7 +40,7 @@ class TestBenchmarkVisualizer(unittest.TestCase):
 
         visualizer = BenchmarkVisualizer()
         output_path = os.path.join(self.temp_dir, "test_convergence.png")
-        visualizer.plot_cost_convergence(df_with_cma, output_path, show_plot=True)
+        visualizer.plot_cost_convergence(df_with_cma, output_path, "Test Plot Title", "Test X Label", show_plot=True)
 
         print(f"\n✅ Convergence plot saved to: {output_path}")
         print("Please check the generated plot to verify it looks correct.")

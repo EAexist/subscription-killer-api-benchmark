@@ -78,7 +78,7 @@ export let options = {
         http_req_failed: ['rate<1'],
         http_req_duration: [`p(100)<${durationToMs(__ENV.AI_BENCHMARK_REQUEST_TIMEOUT)}`],
     },
-    timeout: __ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s',
+    // timeout: __ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s',
 };
 
 // Setup function - runs once before test iterations

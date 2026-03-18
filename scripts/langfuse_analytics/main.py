@@ -15,6 +15,7 @@ from analytics.langfuse_client import LangfuseDataClient
 from analytics.loader import load_and_merge_csv_files, save_raw_data
 from analytics.visualizer import BenchmarkVisualizer
 
+
 def setup_logging(app_version: str):
     """Setup logging to both console and file with UTF-8 support."""
     data_storage_root = os.getenv(
@@ -32,7 +33,7 @@ def setup_logging(app_version: str):
 
     # 1. Explicitly set UTF-8 for the file handler
     file_handler = logging.FileHandler(log_filepath, encoding="utf-8")
-    
+
     # 2. Use sys.stdout for console and handle potential encoding issues
     stream_handler = logging.StreamHandler(sys.stdout)
 
@@ -51,7 +52,7 @@ def setup_logging(app_version: str):
     logger.info(f"Logging to file: {log_filepath}")
 
     return logger
-    
+
 
 def main():
     """Main analytics pipeline."""
@@ -107,16 +108,18 @@ def main():
         # 4. Generate convergence plot
         logger.info("📈 Generating convergence plot...")
 
-        # Add convergence metrics - use 'cost_total' column as that's what's available
+        # Generate total cost plot
         df_with_cma = BenchmarkCalculator.add_convergence_metrics(
             merged_df, "cost_total"
         )
 
-        # Generate plot with descriptive name
-        plot_path = os.path.join(
-            visualizer.output_dir, f"amortized_ai_cost_{app_version}.png"
+        plot_path = os.path.join(visualizer.output_dir, "amortized_ai_cost.png")
+        visualizer.plot_cost_convergence(
+            df_with_cma,
+            "Amortized AI Operational Cost per Request",
+            "Amortized Cost",
+            plot_path,
         )
-        visualizer.plot_cost_convergence(df_with_cma, plot_path)
         logger.info(f"✅ Convergence plot saved to: {plot_path}")
 
         # Generate task-specific plots if task_name column exists
@@ -124,14 +127,20 @@ def main():
             for task_name in merged_df["task_name"].unique():
                 task_df = merged_df[merged_df["task_name"] == task_name]
                 if not task_df.empty:
+                    # Total Cost
                     task_cma = BenchmarkCalculator.add_convergence_metrics(
                         task_df, "cost_total"
                     )
                     task_plot_path = os.path.join(
                         visualizer.output_dir,
-                        f"amortized_ai_cost_{task_name}_{app_version}.png",
+                        f"amortized_ai_cost_{task_name}.png",
                     )
-                    visualizer.plot_cost_convergence(task_cma, task_plot_path)
+                    visualizer.plot_cost_convergence(
+                        task_cma,
+                        f"AI Cost per Request\n(${task_name})",
+                        "Amortized Cost",
+                        task_plot_path,
+                    )
                     logger.info(f"✅ Task-specific plot saved to: {task_plot_path}")
 
         # Generate summary

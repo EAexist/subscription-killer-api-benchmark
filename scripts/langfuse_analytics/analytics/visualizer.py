@@ -25,7 +25,12 @@ class BenchmarkVisualizer:
         plt.rcParams["figure.figsize"] = (12, 8)
 
     def plot_cost_convergence(
-        self, df_subset: pd.DataFrame, output_path: str, show_plot: bool = False
+        self,
+        df_subset: pd.DataFrame,
+        output_path: str,
+        title: str,
+        x_label: str,
+        show_plot: bool = False,
     ) -> None:
         """
         Plot cost convergence data.
@@ -54,19 +59,17 @@ class BenchmarkVisualizer:
                 alpha=0.8,
             )
 
-        plt.title(
-            "Amortized AI Operational Cost per Request", fontsize=16, fontweight="bold"
-        )
+        plt.title(title)
         plt.xlabel("Request", fontsize=12)
-        plt.ylabel(
-            "Amortized AI Cost per Request ($ per thousand requests)", fontsize=12
-        )
+        plt.ylabel(f"${x_label}($ per thousand requests)", fontsize=12)
         plt.legend(fontsize=10)
         plt.grid(True, alpha=0.3)
 
-        # Set x-axis range to start from zero and ticks every 5 units
+        plt.ylim(0)
         max_request_index = df_subset["request_index"].max()
         plt.xlim(0, max_request_index)
+
+        # Set x-axis ticks every 5 units
         tick_positions = range(0, int(max_request_index) + 1, 5)
         plt.xticks(tick_positions)
 

@@ -371,7 +371,7 @@ public class PerformanceBenchmarkTest {
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
 
         String resultsDir = System.getenv().getOrDefault("RESULTS_DIR", "results");
-        Path baseDir = java.nio.file.Paths.get(resultsDir, "runs", gitTag, timestamp);
+        Path baseDir = java.nio.file.Paths.get(resultsDir, "ai-benchmark", gitTag, timestamp);
         java.nio.file.Files.createDirectories(baseDir);
 
         java.nio.file.Files.createDirectories(baseDir.resolve("data"));

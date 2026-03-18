@@ -1,0 +1,2 @@
+# This file ensures the runs directory is tracked by git
+# while allowing runs result contents to be ignored

@@ -3,6 +3,13 @@ name: Benchmark Trigger
 on:
   repository_dispatch:
     types: [new_ai_benchmark_build]
+  workflow_call:
+    inputs:
+      data_branch:
+        description: 'Data branch to checkout'
+        required: false
+        type: string
+        default: 'data'
 
 jobs:
   run-benchmark:
@@ -23,7 +30,7 @@ jobs:
       - name: Checkout Data Branch
         uses: actions/checkout@v4
         with:
-          ref: data
+          ref: ${{ inputs.data_branch }}
           path: data-storage
           token: ${{ secrets.GITHUB_TOKEN }}
 
