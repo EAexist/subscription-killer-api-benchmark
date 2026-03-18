@@ -4,7 +4,7 @@ This **Data & Results Branch** presents AI operational cost benchmark results fo
 
 ---
 
-## 📊 Executive Summary
+<!-- ## 📊 Executive Summary -->
 
 
 ## 📈 Visualized Results
@@ -20,14 +20,7 @@ This visualization tracks how the average cost per request stabilizes over time.
 This visulizations decompose the total operational cost into each AI-backed tasks.
 
 ![Email Categorization Task Costs](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost_categorize_emails.png)
-![Email Categorization Task Costs](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost_categorize_emails.png)
-
----
-
-### 3. Unit Efficiency (Cost per Single Email)
-This chart represents the **Cost per Single Email**, providing a normalized view regardless of the size of email list in users' requests.
-
-![Cost per Single Email](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost.png)
+![Email Template Extraction Task Costs](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png)
 
 ---
 
@@ -39,4 +32,4 @@ This chart represents the **Cost per Single Email**, providing a normalized view
 
 ---
 
-*Last Updated: 2026-03-13*
+*Last Updated: {{ site.time | date: "%Y-%m-%d" }}*
