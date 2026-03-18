@@ -9,4 +9,4 @@ jobs:
     uses: ./.github/workflows/benchmark.yml
     with:
       data_branch: data-test
-  secrets: inherit
+    secrets: inherit
