@@ -107,8 +107,9 @@ jobs:
 
       - name: Pull Mock Server
         run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/gmail-mock-server:latest
-          docker tag ghcr.io/${{ github.repository_owner }}/gmail-mock-server:latest gmail-mock-server:latest
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ghcr.io/${OWNER}/gmail-mock-server:latest
+          docker tag ghcr.io/${OWNER}/gmail-mock-server:latest gmail-mock-server:latest
 
       # TODO: Update benchmark script to output results directly to data-storage/results/runs/ instead of results/
       # This will eliminate the need for copying and use the data branch approach consistently
