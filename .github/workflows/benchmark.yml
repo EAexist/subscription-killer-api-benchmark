@@ -89,19 +89,23 @@ jobs:
 
       - name: Write Spring environment file
         run: |
-          # Combine main spring environment and google account samples
           echo '${{ secrets.SPRING_ENV_FILE_CONTENT }}' > .env.spring.benchmark.part1
           echo '${{ secrets.GOOGLE_ACCOUNT_SAMPLES }}' > .env.spring.benchmark.part2
-          
-          # Combine both parts into final file
           cat .env.spring.benchmark.part1 .env.spring.benchmark.part2 > .env.spring.benchmark
 
-          # This loop injects the file content into the GitHub Actions runner environment
-          while IFS= read -r line || [ -n "$line" ]; do
-            # Skip comments and empty lines
-            if [[ ! $line =~ ^# && -n $line ]]; then
-              echo "$line" >> $GITHUB_ENV
-            fi
+          # 2. Use a safer injection method that handles \r and weird spacing
+          while IFS='=' read -r key value || [ -n "$key" ]; do
+            # Skip empty lines or comments
+            if [[ -z "$key" || "$key" =~ ^# ]]; then continue; fi
+            
+            # Clean the key and value of carriage returns (\r)
+            clean_key=$(echo "$key" | tr -d '\r' | xargs)
+            clean_value=$(echo "$value" | tr -d '\r' | xargs)
+            
+            # Use the EOF delimiter to handle multi-line or special character values
+            echo "$clean_key<<EOF" >> $GITHUB_ENV
+            echo "$clean_value" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
           done < .env.spring.benchmark
           
           # Clean up temporary files
