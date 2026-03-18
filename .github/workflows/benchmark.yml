@@ -105,6 +105,11 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Pull Mock Server
+        run: |
+          docker pull ghcr.io/${{ github.repository_owner }}/gmail-mock-server:latest
+          docker tag ghcr.io/${{ github.repository_owner }}/gmail-mock-server:latest gmail-mock-server:latest
+
       # TODO: Update benchmark script to output results directly to data-storage/results/runs/ instead of results/
       # This will eliminate the need for copying and use the data branch approach consistently
       - name: Run Benchmark

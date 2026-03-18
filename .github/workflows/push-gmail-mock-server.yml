@@ -1,0 +1,38 @@
+name: Build and Push Gmail Mock Server
+
+on:
+  push:
+    paths:
+      - 'scripts/gmail_mock_server/**'
+  workflow_dispatch: 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: scripts/gmail_mock_server/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/gmail-mock-server:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
