@@ -95,6 +95,14 @@ jobs:
           
           # Combine both parts into final file
           cat .env.spring.benchmark.part1 .env.spring.benchmark.part2 > .env.spring.benchmark
+
+          # This loop injects the file content into the GitHub Actions runner environment
+          while IFS= read -r line || [ -n "$line" ]; do
+            # Skip comments and empty lines
+            if [[ ! $line =~ ^# && -n $line ]]; then
+              echo "$line" >> $GITHUB_ENV
+            fi
+          done < .env.spring.benchmark
           
           # Clean up temporary files
           rm .env.spring.benchmark.part1 .env.spring.benchmark.part2
