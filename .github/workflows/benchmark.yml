@@ -88,28 +88,35 @@ jobs:
           echo "app_git_tag=$RAW_TAG" >> $GITHUB_OUTPUT
 
       - name: Write Spring environment file
+        env:
+          SPRING_CONTENT: ${{ secrets.SPRING_ENV_FILE_CONTENT }}
+          GOOGLE_SAMPLES: ${{ secrets.GOOGLE_ACCOUNT_SAMPLES }}
         run: |
-          echo '${{ secrets.SPRING_ENV_FILE_CONTENT }}' > .env.spring.benchmark.part1
-          echo '${{ secrets.GOOGLE_ACCOUNT_SAMPLES }}' > .env.spring.benchmark.part2
-          cat .env.spring.benchmark.part1 .env.spring.benchmark.part2 > .env.spring.benchmark
-
-          # 2. Use a safer injection method that handles \r and weird spacing
-          while IFS='=' read -r key value || [ -n "$key" ]; do
-            # Skip empty lines or comments
-            if [[ -z "$key" || "$key" =~ ^# ]]; then continue; fi
-            
-            # Clean the key and value of carriage returns (\r)
-            clean_key=$(echo "$key" | tr -d '\r' | xargs)
-            clean_value=$(echo "$value" | tr -d '\r' | xargs)
-            
-            # Use the EOF delimiter to handle multi-line or special character values
-            echo "$clean_key<<EOF" >> $GITHUB_ENV
-            echo "$clean_value" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-          done < .env.spring.benchmark
+          echo "--- Creating .env.spring.benchmark ---"
           
-          # Clean up temporary files
+          cat <<'EOF' > .env.spring.benchmark.part1
+            ${{ secrets.SPRING_ENV_FILE_CONTENT }}
+          EOF
+
+          cat <<'EOF' > .env.spring.benchmark.part2
+            ${{ secrets.GOOGLE_ACCOUNT_SAMPLES }}
+          EOF
+          
+          cat .env.spring.benchmark.part1 .env.spring.benchmark.part2 > .env.spring.benchmark
+          
+          # --- LOGGING/VALIDATION LINE ---
+          if grep -q "SPRING_DATASOURCE_URL" .env.spring.benchmark; then
+            echo "✅ SUCCESS: SPRING_DATASOURCE_URL found in .env.spring.benchmark"
+            echo "Total lines in file: $(wc -l < .env.spring.benchmark)"
+          else
+            echo "❌ ERROR: SPRING_DATASOURCE_URL NOT FOUND in the generated file!"
+            echo "Check if 'SPRING_ENV_FILE_CONTENT' secret is set correctly in GitHub."
+            exit 1
+          fi
+
+          # Clean up
           rm .env.spring.benchmark.part1 .env.spring.benchmark.part2
+          echo "---------------------------------------"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
