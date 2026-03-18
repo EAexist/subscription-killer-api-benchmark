@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional, cast
 import json
-import os
 
 from datasets_shared.schema.models import Sample
 from models import GmailMessage
