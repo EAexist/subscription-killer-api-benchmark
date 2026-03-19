@@ -128,6 +128,7 @@ jobs:
           AI_BENCHMARK_ENDPOINT: ${{ vars.AI_BENCHMARK_ENDPOINT }}
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
           AI_BENCHMARK_K6_WARMUP_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_WARMUP_ITERATIONS }}
+          N_EMAILS_PER_REQUEST: ${{ vars.N_EMAILS_PER_REQUEST }}
           AI_BENCHMARK_REQUEST_TIMEOUT: ${{ vars.AI_BENCHMARK_REQUEST_TIMEOUT }}
         run: |
           chmod +x run-ai-benchmark.sh
