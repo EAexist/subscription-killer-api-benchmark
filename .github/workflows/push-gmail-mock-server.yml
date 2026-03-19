@@ -38,9 +38,7 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: scripts/gmail_mock_server/Dockerfile
+          context: scripts/gmail_mock_server 
+          file: scripts/gmail_mock_server/Dockerfile 
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
