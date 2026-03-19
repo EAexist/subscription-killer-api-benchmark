@@ -153,11 +153,12 @@ public class PerformanceBenchmarkTest {
         assertTrue(finalK6Logs.contains("test finished"));
 
         try {
-        System.out.println("Waiting for traces to flush to Langfuse...");
-        Thread.sleep(5000); 
-    } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-    }
+            String flushWaitTime = System.getenv().getOrDefault("LANGFUSE_FLUSH_WAIT_SECONDS", "10");
+            System.out.println("Waiting " + flushWaitTime + "s for observations to flush to Langfuse...");
+            Thread.sleep(Long.parseLong(flushWaitTime) * 1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         // Create benchmark directory once and reuse
         Path benchmarkDir;
