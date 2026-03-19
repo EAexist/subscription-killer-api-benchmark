@@ -73,8 +73,7 @@ public class PerformanceBenchmarkTest {
             .withNetwork(network)
             .withNetworkAliases("gmail-mock-server")
             .withExposedPorts(8080)
-            // .withFileSystemBind("scripts/gmail_mock_server", "/app", BindMode.READ_WRITE)
-            // .withFileSystemBind("datasets", "/app/dataset", BindMode.READ_ONLY)
+            .withEnv("N_EMAILS_PER_REQUEST", BenchmarkTestUtils.getRequiredEnv("N_EMAILS_PER_REQUEST"))
             .withWorkingDirectory("/app")
             .withCommand("python", "mock_server.py")
             .waitingFor(Wait.forHttp("/health").forStatusCode(200));
