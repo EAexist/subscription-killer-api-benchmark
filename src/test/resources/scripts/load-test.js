@@ -42,7 +42,7 @@ function executeRequest(iterationType, iterationNum, totalIterations) {
     console.log("Sending POST request...");
 
     const requestParams = createRequestParams();
-    requestParams.timeout = __ENV.AI_BENCHMARK_REQUEST_TIMEOUT
+    requestParams.timeout = REQUEST_TIMEOUT
     const userId = requestParams.headers['X-Benchmark-User-Id'];
     console.log(`Generated User ID: ${userId}`);
 
@@ -79,7 +79,6 @@ export let options = {
         http_req_failed: ['rate<1'],
         http_req_duration: [`p(100)<${durationToMs(REQUEST_TIMEOUT)}`],
     },
-    // timeout: __ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s',
 };
 
 // Setup function - runs once before test iterations

@@ -147,3 +147,4 @@ jobs:
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
       app_version: ${{ needs.run-benchmark.outputs.app_git_tag }}
+    secrets: inherit
