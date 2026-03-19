@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from .config import PLOTS_DIR
+from .config import PLOTS_DIR, apply_custom_style
 
 
 class BenchmarkVisualizer:
@@ -20,9 +20,7 @@ class BenchmarkVisualizer:
         self.output_dir = PLOTS_DIR
         os.makedirs(self.output_dir, exist_ok=True)
 
-        plt.style.use("seaborn-v0_8-whitegrid")
-        plt.rcParams["figure.autolayout"] = True
-        plt.rcParams["figure.figsize"] = (12, 8)
+        apply_custom_style()
 
     def plot_cost_convergence(
         self,
@@ -53,16 +51,12 @@ class BenchmarkVisualizer:
                 data["request_index"],
                 cost_per_thousand,
                 label=impl,
-                linewidth=2.5,
-                marker="o",
-                markersize=3,
-                alpha=0.8,
             )
 
         plt.title(title)
-        plt.xlabel("Request", fontsize=12)
-        plt.ylabel(f"${x_label}($ per thousand requests)", fontsize=12)
-        plt.legend(fontsize=10)
+        plt.xlabel("Request")
+        plt.ylabel(f"{x_label}($ per thousand requests)")
+        plt.legend()
         plt.grid(True, alpha=0.3)
 
         plt.ylim(0)
@@ -72,6 +66,15 @@ class BenchmarkVisualizer:
         # Set x-axis ticks every 5 units
         tick_positions = range(0, int(max_request_index) + 1, 5)
         plt.xticks(tick_positions)
+
+
+        # 2. Add 10% padding to the upper limit
+        max_cost = df_subset["amortized_cost"].max() * 1_000
+
+        if max_cost > 0:
+            plt.ylim(0, max_cost * 1.1)
+        else:
+            plt.ylim(0, 1) # Fallback for empty/zero data
 
         plt.tight_layout()
         plt.savefig(output_path, dpi=300, bbox_inches="tight")

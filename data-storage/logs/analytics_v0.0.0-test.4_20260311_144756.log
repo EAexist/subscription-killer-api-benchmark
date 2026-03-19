@@ -1,8 +1,0 @@
-Log started at 2026-03-11 14:47:56.030177
-2026-03-11 14:48:01,228 - INFO - - Raw data: C:\Users\hyeon\workspace\subscription-killer-platform\subscription-killer-benchmark\data-storage\results\raw\benchmark_v0.0.0-test.4_20260311.csv
-2026-03-11 14:48:01,228 - INFO - - Total records: 12
-2026-03-11 14:48:01,229 - INFO - - Task names: <StringArray>
-['categorize_emails', 'extract_email_templates']
-Length: 2, dtype: str
-2026-03-11 14:48:01,229 - INFO - - Total cost: $0.004516
-2026-03-11 14:48:01,230 - INFO - - Average cost per request: $0.000376
