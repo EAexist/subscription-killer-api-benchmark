@@ -6,6 +6,7 @@ const BASE_URL = __ENV.API_BASE_URL || 'http://spring-app:8080';
 const ENDPOINT = __ENV.AI_BENCHMARK_ENDPOINT || 'api/benchmark/analyze';
 const TEST_ITERATIONS = parseInt(__ENV.AI_BENCHMARK_K6_ITERATIONS) || 1;
 const WARMUP_ITERATIONS = parseInt(__ENV.AI_BENCHMARK_K6_WARMUP_ITERATIONS) || 0;
+const REQUEST_TIMEOUT = __ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s'
 
 // Convert duration string to milliseconds (e.g., "5m" -> 300000)
 function durationToMs(durationStr) {
@@ -66,7 +67,7 @@ function logConfiguration() {
     console.log(`Warmup iterations: ${WARMUP_ITERATIONS}`);
     console.log(`Total iterations: ${TEST_ITERATIONS + WARMUP_ITERATIONS}`);
     console.log(`Target endpoint: ${BASE_URL}/${ENDPOINT}`);
-    console.log(`Request timeout: ${__ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s'}`);
+    console.log(`Request timeout: ${REQUEST_TIMEOUT}`);
     console.log(`Verbose Docker logs: ${__ENV.AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS || 'false'}`);
 }
 
@@ -76,7 +77,7 @@ export let options = {
     iterations: TEST_ITERATIONS,
     thresholds: {
         http_req_failed: ['rate<1'],
-        http_req_duration: [`p(100)<${durationToMs(__ENV.AI_BENCHMARK_REQUEST_TIMEOUT)}`],
+        http_req_duration: [`p(100)<${durationToMs(REQUEST_TIMEOUT)}`],
     },
     // timeout: __ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s',
 };
