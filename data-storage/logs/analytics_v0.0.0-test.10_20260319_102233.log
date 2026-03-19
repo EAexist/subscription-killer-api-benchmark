@@ -1,0 +1,7 @@
+Log started at 2026-03-19 10:22:33.192855 🚀
+2026-03-19 10:22:33,192 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/analytics_v0.0.0-test.10_20260319_102233.log
+2026-03-19 10:22:33,193 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.10
+2026-03-19 10:22:33,274 - INFO - 📊 Fetching data from Langfuse...
+2026-03-19 10:22:33,274 - INFO - 📊 Fetching generations for version: v0.0.0-test.10...
+2026-03-19 10:22:33,981 - INFO - ✅ Found 0 generations for app_version v0.0.0-test.10
+2026-03-19 10:22:33,981 - ERROR - ❌ No data found in Langfuse
