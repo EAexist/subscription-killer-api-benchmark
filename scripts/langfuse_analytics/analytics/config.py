@@ -22,7 +22,7 @@ PLOT_NAMING_PATTERN = "{metric}_results.png"
 
 # Processing constants
 DEFAULT_RETRY_COUNT = 5
-DEFAULT_INITIAL_DELAY = 30
+DEFAULT_INITIAL_DELAY = 60
 MAX_REQUEST_INDEX_TICKS = 5
 
 # API endpoints and secrets
