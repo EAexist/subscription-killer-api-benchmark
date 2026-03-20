@@ -114,6 +114,9 @@ class MessageSelector:
             random.shuffle(current_chunk)
             chunks.append(current_chunk)
 
+        # 6. Shuffle the final chunk list for random chunk order
+        random.shuffle(chunks)
+
         return chunks
     
     def _create_optimal_chunks(self, samples_by_company, available_companies, samples_per_company, target_chunks):
