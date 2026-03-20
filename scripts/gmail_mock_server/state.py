@@ -7,6 +7,7 @@ from services.message_selector import MessageSelector
 from utils.data_utils import DataProcessor, MessageUtils
 from huggingface_hub import hf_hub_download
 from datasets import load_dataset
+from config import settings
 
 
 class AppState:
@@ -49,7 +50,11 @@ class AppState:
             )
 
             # Initialize message selector service
-            self._set_message_selector(MessageSelector(self.gmail_messages))
+            self._set_message_selector(MessageSelector(
+                self.samples, 
+                chunk_size=settings.n_emails_per_request,
+                companies_per_chunk=settings.n_companies_per_chunk
+            ))
 
             # Type assertion for the type checker - we know it's initialized now
             selector: MessageSelector = cast(MessageSelector, self._message_selector)

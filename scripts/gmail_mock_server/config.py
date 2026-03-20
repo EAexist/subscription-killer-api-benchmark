@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 
     # Required field (no default value)
     n_emails_per_request: int = Field(..., alias="N_EMAILS_PER_REQUEST")
+    
+    # Number of different companies per chunk (no default value)
+    n_companies_per_chunk: int = Field(..., alias="N_COMPANIES_PER_CHUNK")
 
     # Modern Pydantic v2 configuration
     model_config = SettingsConfigDict(env_file=str(ENV_PATH), extra="ignore", env_prefix="")
