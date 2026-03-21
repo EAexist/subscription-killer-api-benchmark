@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     
     # Number of different companies per chunk (no default value)
     n_companies_per_chunk: int = Field(..., alias="N_COMPANIES_PER_CHUNK")
+    
+    # Random seed for reproducible message selection
+    random_seed: int = Field(default=42, alias="RANDOM_SEED")
 
     # Modern Pydantic v2 configuration
     model_config = SettingsConfigDict(env_file=str(ENV_PATH), extra="ignore", env_prefix="")

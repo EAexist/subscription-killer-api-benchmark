@@ -53,7 +53,8 @@ class AppState:
             self._set_message_selector(MessageSelector(
                 self.samples, 
                 chunk_size=settings.n_emails_per_request,
-                companies_per_chunk=settings.n_companies_per_chunk
+                companies_per_chunk=settings.n_companies_per_chunk,
+                random_seed=settings.random_seed
             ))
 
             # Type assertion for the type checker - we know it's initialized now

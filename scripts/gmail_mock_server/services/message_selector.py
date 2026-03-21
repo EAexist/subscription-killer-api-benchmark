@@ -15,6 +15,7 @@ sys.path.insert(
 from datasets_shared.schema.models import Sample
 from models import GmailMessage
 from utils.data_utils import DataProcessor
+from config import settings
 
 
 class MessageSelector:
@@ -23,25 +24,27 @@ class MessageSelector:
     def __init__(
         self,
         samples: List[Sample],
-        chunk_size: int,
-        companies_per_chunk: int,
+        chunk_size: Optional[int] = None,
+        companies_per_chunk: Optional[int] = None,
         random_seed: Optional[int] = None,
     ):
         """
-        Initialize the message selector with samples and prepare chunks.
+        Initialize message selector with samples and prepare chunks.
 
         Args:
             samples: List of Sample objects to select from
             chunk_size: Size of each chunk (config.n_emails_per_request)
             companies_per_chunk: Number of different companies per chunk (config.n_companies_per_chunk)
-            random_seed: Optional seed for reproducible shuffling. If None, shuffling is random.
+            random_seed: Optional seed for reproducible shuffling. If None, uses config value.
         """
         self.samples = samples
-        self.chunk_size = chunk_size
-        self.companies_per_chunk = companies_per_chunk
+        self.chunk_size = chunk_size or settings.n_emails_per_request
+        self.companies_per_chunk = companies_per_chunk or settings.n_companies_per_chunk
         
-        if random_seed is not None:
-            random.seed(random_seed)
+        # Use local Random instance for exact reproducibility
+        # Priority: provided parameter > config value > None
+        seed_to_use = random_seed or settings.random_seed
+        self.rng = random.Random(seed_to_use) if seed_to_use is not None else random.Random()
 
         # Prepare chunks with company_id constraints
         self._chunks = self._prepare_chunks()
@@ -58,10 +61,10 @@ class MessageSelector:
         if len(available_companies) < self.companies_per_chunk:
             raise ValueError(f"Need {self.companies_per_chunk} companies, found {len(available_companies)}")
 
-        # Shuffle internal samples for randomness within the company
+        # Shuffle internal samples for randomness within company
         for cid in samples_by_company:
             temp_list = list(samples_by_company[cid])
-            random.shuffle(temp_list)
+            self.rng.shuffle(temp_list)
             samples_by_company[cid] = deque(temp_list)
 
         chunks = []
@@ -111,100 +114,12 @@ class MessageSelector:
                 remaining_needed -= take_amount
 
             # 5. Finalize Chunk
-            random.shuffle(current_chunk)
+            self.rng.shuffle(current_chunk)
             chunks.append(current_chunk)
 
         # 6. Shuffle the final chunk list for random chunk order
-        random.shuffle(chunks)
+        self.rng.shuffle(chunks)
 
-        return chunks
-    
-    def _create_optimal_chunks(self, samples_by_company, available_companies, samples_per_company, target_chunks):
-        """
-        Create optimal chunks using mathematical planning to maximize sample utilization.
-        """
-        chunks = []
-        company_usage = {company_id: 0 for company_id in available_companies}
-        
-        for chunk_idx in range(target_chunks):
-            # Select companies with remaining samples, prioritizing those with most samples left
-            companies_with_samples = [
-                company_id for company_id in available_companies 
-                if company_usage[company_id] < samples_per_company
-            ]
-            
-            if len(companies_with_samples) < self.companies_per_chunk:
-                break  # Not enough companies with remaining samples
-            
-            # Sort by remaining samples (descending) to prioritize companies with most samples left
-            companies_with_samples.sort(key=lambda cid: samples_per_company - company_usage[cid])
-            
-            # Select companies for this chunk
-            companies_for_chunk = companies_with_samples[:self.companies_per_chunk]
-            
-            # Calculate flexible distribution for this chunk
-            chunk_samples = []
-            remaining_size = self.chunk_size
-            
-            # Distribute samples evenly, but allow flexibility
-            base_distribution = remaining_size // self.companies_per_chunk
-            extra_samples = remaining_size % self.companies_per_chunk
-            
-            # Assign samples to companies
-            for i, company_id in enumerate(companies_for_chunk):
-                # Calculate how many samples this company can contribute
-                max_possible = min(
-                    base_distribution + (1 if i < extra_samples else 0),
-                    samples_per_company - company_usage[company_id]
-                )
-                
-                # Take samples from this company
-                start_pos = company_usage[company_id]
-                end_pos = start_pos + max_possible
-                
-                if end_pos <= len(samples_by_company[company_id]):
-                    chunk_samples.extend(samples_by_company[company_id][start_pos:end_pos])
-                    company_usage[company_id] += max_possible
-                    remaining_size -= max_possible
-            
-            # If we still need more samples to reach chunk_size, distribute from companies with most remaining
-            if remaining_size > 0:
-                # Sort companies by remaining samples again
-                remaining_companies = [
-                    cid for cid in companies_for_chunk 
-                    if company_usage[cid] < samples_per_company
-                ]
-                remaining_companies.sort(key=lambda cid: samples_per_company - company_usage[cid], reverse=True)
-                
-                for company_id in remaining_companies:
-                    if remaining_size <= 0:
-                        break
-                    
-                    can_take = min(remaining_size, samples_per_company - company_usage[company_id])
-                    start_pos = company_usage[company_id]
-                    end_pos = start_pos + can_take
-                    
-                    if end_pos <= len(samples_by_company[company_id]):
-                        chunk_samples.extend(samples_by_company[company_id][start_pos:end_pos])
-                        company_usage[company_id] += can_take
-                        remaining_size -= can_take
-            
-            # Verify chunk requirements
-            if len(chunk_samples) == self.chunk_size:
-                company_ids_in_chunk = [sample.company_id for sample in chunk_samples]
-                unique_companies = set(company_ids_in_chunk)
-                
-                if len(unique_companies) >= self.companies_per_chunk:
-                    # Shuffle the chunk to randomize order
-                    random.shuffle(chunk_samples)
-                    chunks.append(chunk_samples)
-                else:
-                    print(f"⚠️ Chunk {chunk_idx} failed: only {len(unique_companies)} companies, need {self.companies_per_chunk}")
-                    break
-            else:
-                print(f"⚠️ Chunk {chunk_idx} failed: only {len(chunk_samples)} samples, need {self.chunk_size}")
-                break
-        
         return chunks
 
     def select_messages(self) -> List[GmailMessage]:

@@ -30,7 +30,7 @@ class TestMessageSelector:
                 samples.append(sample)
         
         # Test with chunk_size=5, companies_per_chunk=5 (1 sample per company)
-        selector = MessageSelector(samples, chunk_size=5, companies_per_chunk=5, random_seed=42)
+        selector = MessageSelector(samples, random_seed=42)
         
         # Should create 10 chunks (10 samples per company ÷ 1 per chunk)
         assert len(selector._chunks) == 10
@@ -59,7 +59,7 @@ class TestMessageSelector:
                 samples.append(sample)
         
         # Test with companies_per_chunk=3
-        selector = MessageSelector(samples, chunk_size=6, companies_per_chunk=3, random_seed=42)
+        selector = MessageSelector(samples, companies_per_chunk=3, chunk_size=6, random_seed=42)
         
         # Each chunk should have exactly 3 different companies
         for chunk in selector._chunks:
@@ -85,7 +85,7 @@ class TestMessageSelector:
                 samples.append(sample)
         
         # Test with chunk_size=10, companies_per_chunk=5 (flexible distribution)
-        selector = MessageSelector(samples, chunk_size=10, companies_per_chunk=5, random_seed=42)
+        selector = MessageSelector(samples, companies_per_chunk=5, chunk_size=10, random_seed=42)
         
         # Should create 20 chunks (200 total samples ÷ 10 chunk_size)
         assert len(selector._chunks) == 20
@@ -114,7 +114,7 @@ class TestMessageSelector:
                 samples.append(sample)
         
         # Test with chunk_size=7, companies_per_chunk=5 (flexible distribution)
-        selector = MessageSelector(samples, chunk_size=7, companies_per_chunk=5, random_seed=42)
+        selector = MessageSelector(samples, companies_per_chunk=5, chunk_size=7, random_seed=42)
         
         # Should create 28 chunks (200 total samples ÷ 7 chunk_size = 28 with 4 leftover)
         assert len(selector._chunks) == 28
@@ -144,7 +144,7 @@ class TestMessageSelector:
         
         # Should raise ValueError when companies_per_chunk=5 but only 3 available
         with pytest.raises(ValueError, match="Need 5 companies, found 3"):
-            MessageSelector(samples, chunk_size=5, companies_per_chunk=5)
+            MessageSelector(samples, companies_per_chunk=5)
 
     def test_select_messages_until_exhaustion(self):
         """Test selecting messages until all chunks are exhausted."""
@@ -163,7 +163,7 @@ class TestMessageSelector:
                 
                 samples.append(sample)
         
-        selector = MessageSelector(samples, chunk_size=5, companies_per_chunk=5, random_seed=42)
+        selector = MessageSelector(samples, random_seed=42)
         
         # Should be able to select 4 chunks
         for _ in range(4):
@@ -192,8 +192,8 @@ class TestMessageSelector:
                 samples.append(sample)
         
         # Create two selectors with same seed and companies_per_chunk
-        selector1 = MessageSelector(samples, chunk_size=5, companies_per_chunk=5, random_seed=42)
-        selector2 = MessageSelector(samples, chunk_size=5, companies_per_chunk=5, random_seed=42)
+        selector1 = MessageSelector(samples, companies_per_chunk=5, random_seed=42)
+        selector2 = MessageSelector(samples, companies_per_chunk=5, random_seed=42)
         
         # Should produce same chunks
         assert len(selector1._chunks) == len(selector2._chunks)
