@@ -1,0 +1,16 @@
+Log started at 2026-03-21 06:43:20.076612 🚀
+2026-03-21 06:43:20,076 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/analytics_v0.0.0-test.31_20260321_064320.log
+2026-03-21 06:43:20,076 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.31
+2026-03-21 06:43:20,151 - INFO - 📊 Fetching data from Langfuse...
+2026-03-21 06:43:20,151 - INFO - 📊 Fetching generations for version: v0.0.0-test.31...
+2026-03-21 06:43:20,779 - ERROR - ❌ Error fetching from Langfuse (attempt 1): '>=' not supported between instances of 'int' and 'str'
+2026-03-21 06:43:20,779 - INFO - Retrying in 60s... (Attempt 1/5)
+2026-03-21 06:44:21,389 - ERROR - ❌ Error fetching from Langfuse (attempt 2): '>=' not supported between instances of 'int' and 'str'
+2026-03-21 06:44:21,389 - INFO - Retrying in 120s... (Attempt 2/5)
+2026-03-21 06:46:22,028 - ERROR - ❌ Error fetching from Langfuse (attempt 3): '>=' not supported between instances of 'int' and 'str'
+2026-03-21 06:46:22,028 - INFO - Retrying in 240s... (Attempt 3/5)
+2026-03-21 06:50:22,682 - ERROR - ❌ Error fetching from Langfuse (attempt 4): '>=' not supported between instances of 'int' and 'str'
+2026-03-21 06:50:22,683 - INFO - Retrying in 480s... (Attempt 4/5)
+2026-03-21 06:58:23,436 - ERROR - ❌ Error fetching from Langfuse (attempt 5): '>=' not supported between instances of 'int' and 'str'
+2026-03-21 06:58:23,436 - ERROR - ❌ Max retries reached. Returning empty list.
+2026-03-21 06:58:23,436 - ERROR - ❌ No data found in Langfuse
