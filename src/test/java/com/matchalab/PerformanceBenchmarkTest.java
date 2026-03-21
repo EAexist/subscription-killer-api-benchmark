@@ -74,6 +74,7 @@ public class PerformanceBenchmarkTest {
             .withNetworkAliases("gmail-mock-server")
             .withExposedPorts(8080)
             .withEnv("N_EMAILS_PER_REQUEST", BenchmarkTestUtils.getRequiredEnv("N_EMAILS_PER_REQUEST"))
+            .withEnv("N_COMPANIES_PER_CHUNK", BenchmarkTestUtils.getRequiredEnv("N_COMPANIES_PER_CHUNK"))
             .withWorkingDirectory("/app")
             .withCommand("python", "mock_server.py")
             .waitingFor(Wait.forHttp("/health").forStatusCode(200));
