@@ -14,4 +14,5 @@ echo "Starting container..."
 MSYS_NO_PATHCONV=1 docker run --rm -it \
     -p 8080:8080 \
     -e N_EMAILS_PER_REQUEST=20 \
+    -e N_COMPANIES_PER_CHUNK=5 \
     gmail-mock-server:latest

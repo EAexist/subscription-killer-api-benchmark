@@ -76,9 +76,10 @@ def main():
         # 1. Fetch data from Langfuse
         logger.info("📊 Fetching data from Langfuse...")
         # Fetch without expected count for now (can be added later if needed)
+        expected_count = os.getenv("AI_BENCHMARK_K6_ITERATIONS")
         generations = client.fetch_benchmark_generations(
             app_version=app_version,
-            expected_count=os.getenv("AI_BENCHMARK_K6_ITERATIONS", None),
+            expected_count=int(expected_count) if expected_count else None,
         )
 
         if not generations:
