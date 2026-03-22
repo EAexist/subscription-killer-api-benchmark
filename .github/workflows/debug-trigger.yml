@@ -1,4 +1,4 @@
-name: DEV: Benchmark Trigger
+name: "DEV: Benchmark Trigger"
 
 on:
   workflow_dispatch:
