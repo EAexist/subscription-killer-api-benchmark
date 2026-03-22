@@ -1,4 +1,4 @@
-name: Benchmark Test
+name: DEV: Benchmark Test
 
 on:
   repository_dispatch:

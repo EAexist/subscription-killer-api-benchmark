@@ -1,4 +1,4 @@
-name: "DEV: Test Benchmark Result"
+name: DEV: Benchmark Result Test
 
 on: 
   workflow_dispatch:
