@@ -1,0 +1,30 @@
+Log started at 2026-03-22 10:40:06.745288 🚀
+2026-03-22 10:40:06,745 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/analytics_v0.0.0-test.40_20260322_104006.log
+2026-03-22 10:40:06,745 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.40
+2026-03-22 10:40:06,828 - INFO - 📊 Fetching data from Langfuse...
+2026-03-22 10:40:06,828 - INFO - 📊 Fetching generations for version: v0.0.0-test.40...
+2026-03-22 10:40:07,328 - WARNING - ⏳ Found 0/200 generations. Retrying in 60s... (Attempt 1/5)
+2026-03-22 10:41:07,823 - WARNING - ⏳ Found 0/200 generations. Retrying in 120s... (Attempt 2/5)
+2026-03-22 10:43:08,634 - WARNING - ⏳ Found 100/200 generations. Retrying in 240s... (Attempt 3/5)
+2026-03-22 10:47:09,475 - WARNING - ⏳ Found 100/200 generations. Retrying in 480s... (Attempt 4/5)
+2026-03-22 10:55:09,995 - WARNING - ⚠️  Max retries reached. Proceeding with partial data (100 generations)
+2026-03-22 10:55:09,995 - INFO - ✅ Found 100 generations
+2026-03-22 10:55:10,000 - INFO - 📋 DataFrame shape: (100, 14)
+2026-03-22 10:55:10,000 - INFO - 💾 Saving raw data...
+2026-03-22 10:55:10,003 - INFO - 📂 Loading and merging all CSV files...
+2026-03-22 10:55:10,008 - INFO - 📋 Merged DataFrame shape: (129, 14)
+2026-03-22 10:55:10,009 - INFO - 📈 Generating convergence plot...
+2026-03-22 10:55:10,569 - INFO - ✅ Convergence plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost.png
+2026-03-22 10:55:11,062 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_categorize_emails.png
+2026-03-22 10:55:11,545 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png
+2026-03-22 10:55:11,545 - INFO - 
+📊 Summary:
+2026-03-22 10:55:11,545 - INFO - - Raw data: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/raw/benchmark_v0.0.0-test.40_20260322.csv
+2026-03-22 10:55:11,545 - INFO - - Total records: 129
+2026-03-22 10:55:11,546 - INFO - - Task names: <StringArray>
+['categorize_emails', 'extract_email_templates']
+Length: 2, dtype: str
+2026-03-22 10:55:11,546 - INFO - - Total cost: $0.331704
+2026-03-22 10:55:11,546 - INFO - - Average cost per request: $0.002571
+2026-03-22 10:55:11,546 - INFO - 
+🎉 Analytics pipeline completed successfully!
