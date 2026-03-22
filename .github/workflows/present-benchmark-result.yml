@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'data'
+      data_branch:
+        description: 'Data branch to checkout'
+        required: false
+        type: string
+        default: 'data'
     # ... outputs stay same
 
 jobs:
