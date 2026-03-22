@@ -1,0 +1,28 @@
+Log started at 2026-03-22 02:30:33.103499 🚀
+2026-03-22 02:30:33,103 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/analytics_v0.0.0-test.32_20260322_023033.log
+2026-03-22 02:30:33,103 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.32
+2026-03-22 02:30:33,179 - INFO - 📊 Fetching data from Langfuse...
+2026-03-22 02:30:33,179 - INFO - 📊 Fetching generations for version: v0.0.0-test.32...
+2026-03-22 02:30:33,867 - WARNING - ⏳ Found 0/5 generations. Retrying in 60s... (Attempt 1/5)
+2026-03-22 02:31:34,479 - WARNING - ⏳ Found 0/5 generations. Retrying in 120s... (Attempt 2/5)
+2026-03-22 02:33:35,083 - INFO - ✅ Found all 10 generations for app_version v0.0.0-test.32
+2026-03-22 02:33:35,083 - INFO - ✅ Found 10 generations
+2026-03-22 02:33:35,087 - INFO - 📋 DataFrame shape: (10, 14)
+2026-03-22 02:33:35,087 - INFO - 💾 Saving raw data...
+2026-03-22 02:33:35,089 - INFO - 📂 Loading and merging all CSV files...
+2026-03-22 02:33:35,093 - INFO - 📋 Merged DataFrame shape: (15, 14)
+2026-03-22 02:33:35,093 - INFO - 📈 Generating convergence plot...
+2026-03-22 02:33:35,536 - INFO - ✅ Convergence plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost.png
+2026-03-22 02:33:36,017 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_categorize_emails.png
+2026-03-22 02:33:36,432 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png
+2026-03-22 02:33:36,432 - INFO - 
+📊 Summary:
+2026-03-22 02:33:36,432 - INFO - - Raw data: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/raw/benchmark_v0.0.0-test.32_20260322.csv
+2026-03-22 02:33:36,432 - INFO - - Total records: 15
+2026-03-22 02:33:36,432 - INFO - - Task names: <StringArray>
+['categorize_emails', 'extract_email_templates']
+Length: 2, dtype: str
+2026-03-22 02:33:36,433 - INFO - - Total cost: $0.028839
+2026-03-22 02:33:36,433 - INFO - - Average cost per request: $0.001923
+2026-03-22 02:33:36,433 - INFO - 
+🎉 Analytics pipeline completed successfully!
