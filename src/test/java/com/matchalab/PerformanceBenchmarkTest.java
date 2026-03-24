@@ -369,16 +369,16 @@ public class PerformanceBenchmarkTest {
     private Path createBenchmarkDirectory() throws java.io.IOException {
         String gitTag = System.getenv().getOrDefault("APP_GIT_TAG", "unknown");
         String timestamp = java.time.LocalDateTime.now()
-                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
-        String resultsDir = System.getenv().getOrDefault("RESULTS_DIR", "results");
-        Path baseDir = java.nio.file.Paths.get(resultsDir, "ai-benchmark", gitTag, timestamp);
+        // Use DATA_STORAGE_ROOT like setup_logging does
+        String dataStorageRoot = System.getenv().getOrDefault("DATA_STORAGE_ROOT", "data-storage");
+        Path baseDir = java.nio.file.Paths.get(dataStorageRoot, "ai-benchmark", gitTag, timestamp);
         java.nio.file.Files.createDirectories(baseDir);
 
-        java.nio.file.Files.createDirectories(baseDir.resolve("data"));
-        java.nio.file.Files.createDirectories(baseDir.resolve("reports"));
-        java.nio.file.Files.createDirectories(baseDir.resolve("logs"));
-        java.nio.file.Files.createDirectories(baseDir.resolve("artifacts"));
+        // Create logs under same path as setup_logging: {DATA_STORAGE_ROOT}/logs/{app_version}
+        Path logsDir = java.nio.file.Paths.get(dataStorageRoot, "logs", gitTag);
+        java.nio.file.Files.createDirectories(logsDir);
 
         return baseDir;
     }

@@ -5,6 +5,30 @@
 
 set -e  # Exit on any error
 
+# Default: load .env.dev overrides
+USE_DEV_ENV=true
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --prod)
+            USE_DEV_ENV=false
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--prod]"
+            echo "  --prod          Use production config (skip .env.dev overrides)"
+            echo "  -h, --help      Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Load environment variables from .env file
 if [ -f ".env" ]; then
     echo "📝 Loading environment variables from .env..."
@@ -14,6 +38,20 @@ if [ -f ".env" ]; then
 else
     echo "❌ Error: .env file not found!"
     exit 1
+fi
+
+# Load .env.dev overrides if enabled and file exists
+if [ "$USE_DEV_ENV" = true ]; then
+    if [ -f ".env.dev" ]; then
+        echo "📝 Loading environment variable overrides from .env.dev..."
+        set -a
+        source .env.dev
+        set +a
+    else
+        echo "⚠️  .env.dev file not found, skipping overrides"
+    fi
+else
+    echo "📝 Skipping .env.dev overrides (production mode enabled by --prod)"
 fi
 
 # Set default IMAGE_NAME if not already set

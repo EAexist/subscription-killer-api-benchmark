@@ -7,6 +7,7 @@ Fetches data, processes it, and generates visualizations.
 import argparse
 import logging
 import os
+from pathlib import Path
 import sys
 from datetime import datetime
 
@@ -16,16 +17,18 @@ from analytics.loader import load_and_merge_csv_files, save_raw_data
 from analytics.visualizer import BenchmarkVisualizer
 
 
-def setup_logging(app_version: str):
+def setup_logging(app_version: str, run_id: str, analytics_run_id: str):
     """Setup logging to both console and file with UTF-8 support."""
     data_storage_root = os.getenv(
         "DATA_STORAGE_ROOT", os.path.join(os.getcwd(), "..", "..", "data-storage")
     )
-    logs_dir = os.path.join(data_storage_root, "logs")
-    os.makedirs(logs_dir, exist_ok=True)
+    logs_dir = Path(data_storage_root) / "logs"/ app_version
+
+    # Create all directories in the chain
+    logs_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"analytics_{app_version}_{timestamp}.log"
+    log_filename = f"analytics_{run_id}_{analytics_run_id}_{timestamp}.log"
     log_filepath = os.path.join(logs_dir, log_filename)
 
     logger = logging.getLogger()
@@ -60,12 +63,20 @@ def main():
     parser.add_argument(
         "--app-version", required=True, help="App version/tag to fetch from Langfuse"
     )
+    parser.add_argument(
+        "--run-id", required=True, help="Run ID to save logs"
+    )
+    parser.add_argument(
+        "--analytics-run-id", required=True, help="Analytics run ID to save logs"
+    )
     args = parser.parse_args()
 
     app_version = args.app_version
-    logger = setup_logging(app_version)
+    run_id = args.run_id  
+    analytics_run_id = args.analytics_run_id  
+    logger = setup_logging(app_version, run_id, analytics_run_id)
     logger.info(
-        f"🚀 Starting Langfuse Analytics Pipeline for app_version: {app_version}"
+        f"🚀 Starting Langfuse Analytics Pipeline for app_version: {app_version}, run_id: {run_id}, analytics_run_id: {analytics_run_id}"
     )
 
     # Initialize components

@@ -3,6 +3,9 @@ name: Benchmark Process
 on:
   workflow_call:
     inputs:
+      run_id:
+        required: true
+        type: string
       app_version:
         required: true
         type: string
@@ -60,14 +63,13 @@ jobs:
           if [ -n "$LANGFUSE_SECRET_KEY" ]; then
             echo " Langfuse credentials found. Running analytics pipeline..."
             cd main-repo/scripts/langfuse_analytics
-            python main.py --app-version "${{ inputs.app_version }}"
+            python main.py --app-version "${{ inputs.app_version }}" --run-id "${{ env.run_id }}" --analytics-run-id "${{ github.run_id }}"
           else
             echo " LANGFUSE_SECRET_KEY not found. Skipping analytics pipeline."
             echo "Please set LANGFUSE_SECRET_KEY and LANGFUSE_PUBLIC_KEY secrets in your repository settings."
           fi
 
       - name: Commit and Push
-        # TODO: change to data when ready
         working-directory: data-repo
         run: |
           git config user.name "github-actions[bot]"

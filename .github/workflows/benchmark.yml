@@ -30,7 +30,7 @@ jobs:
       - name: Checkout Data Branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.data_branch || 'data' }}
+          ref: ${{ inputs.data_branch }}
           path: data-storage
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -111,6 +111,9 @@ jobs:
           docker pull ghcr.io/${OWNER}/gmail-mock-server:latest
           docker tag ghcr.io/${OWNER}/gmail-mock-server:latest gmail-mock-server:latest
 
+      - name: Set Run Id
+        run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
       # TODO: Update benchmark script to output results directly to data-storage/results/runs/ instead of results/
       # This will eliminate the need for copying and use the data branch approach consistently
       - name: Run Benchmark
@@ -120,6 +123,7 @@ jobs:
           APP_GIT_TAG: ${{ env.APP_GIT_TAG }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           RESULTS_DIR: data-storage  # Use data-storage directly
+          RUN_ID: "${{ env.RUN_ID }}"
 
           # AI Cost Benchmark configuration
           GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
@@ -149,10 +153,32 @@ jobs:
           sleep 300  # 5 minutes = 300 seconds
           echo "✅ Wait completed, proceeding with result processing"
 
+      - name: Commit and Push Benchmark Results
+        working-directory: data-storage
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Debug: See what files were created/modified
+          echo "Files in data-storage:"
+          find . -type f -name "*.json" -o -name "*.txt" -o -name "*.log" | head -20
+          
+          git add .
+          
+          # Only commit and push if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "benchmark: add results for ${{ env.APP_GIT_TAG }} (run ${{ env.RUN_ID }})"
+            git push origin HEAD:${{ inputs.data_branch }}
+            echo "✅ Benchmark results pushed to data branch"
+          else
+            echo "⚠️ No benchmark results detected. Skipping push."
+          fi
+
   process-benchmark-data:
     needs: run-benchmark
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
       app_version: ${{ needs.run-benchmark.outputs.app_git_tag }}
       data_branch: ${{ inputs.data_branch }}
+      run_id: ${{ env.RUN_ID }}
     secrets: inherit

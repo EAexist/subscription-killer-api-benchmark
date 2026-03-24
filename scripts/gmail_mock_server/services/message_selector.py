@@ -46,14 +46,81 @@ class MessageSelector:
         seed_to_use = random_seed or settings.random_seed
         self.rng = random.Random(seed_to_use) if seed_to_use is not None else random.Random()
 
+        # Prepare samples according to filtering criteria
+        samples_to_use = self._prepare_samples(samples)
+        
         # Prepare chunks with company_id constraints
-        self._chunks = self._prepare_chunks()
+        self._chunks = self._prepare_chunks(samples_to_use)
         self._current_chunk_index = 0
 
-    def _prepare_chunks(self) -> List[List[Sample]]:
+    def _prepare_samples(self, samples: List[Sample]) -> List[Sample]:
+        """
+        Prepare a subset of samples according to specific criteria:
+        1. Pick first 20 unique company_id values
+        2. For each company_id and each subscriptionEventType, pick calculated number of template_ids
+        3. Use all samples for selected template_ids (10 samples per template)
+        
+        Args:
+            samples: List of all available samples
+            
+        Returns:
+            List of filtered samples meeting the criteria
+        """
+        from collections import defaultdict
+        from math import ceil
+        
+        # Calculate total emails needed and required templates
+        total_emails_needed = settings.n_emails_per_request * settings.n_requests
+        samples_per_template = 10  # Fixed number of samples per template
+        n_companies = 8
+        num_event_types = 5
+        
+        # Calculate required templates per event type (ceiling up)
+        templates_per_event_type = ceil(total_emails_needed / (num_event_types * samples_per_template * n_companies))
+        
+        print(f"📊 Sample prep: {total_emails_needed} emails, {num_event_types} event types, {templates_per_event_type} templates/event")
+        
+        # Group samples by company_id, subscriptionEventType, and template_id
+        samples_by_hierarchy = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        
+        for sample in samples:
+            company_id = sample.company_id
+            event_type = getattr(sample, 'subscription_event_type', 'unknown')
+            template_id = getattr(sample, 'template_id', 'unknown')
+            samples_by_hierarchy[company_id][event_type][template_id].append(sample)
+        
+        # Get the first 20 unique company_ids
+        all_company_ids = sorted(samples_by_hierarchy.keys())
+        selected_company_ids = all_company_ids[:n_companies]
+        
+        filtered_samples = []
+        
+        for company_id in selected_company_ids:
+            company_events = samples_by_hierarchy[company_id]
+            
+            # Get all event types for this company
+            all_event_types = sorted(company_events.keys())
+            
+            for event_type in all_event_types:
+                event_templates = company_events[event_type]
+                
+                # Get the calculated number of template_ids for this event type
+                all_template_ids = sorted(event_templates.keys())
+                selected_template_ids = all_template_ids[:templates_per_event_type]
+                
+                for template_id in selected_template_ids:
+                    # Add all samples for this template (should be 10 per template)
+                    template_samples = event_templates[template_id]
+                    filtered_samples.extend(template_samples)
+        
+        print(f"📊 Prepared {len(selected_company_ids)} companies, {len(filtered_samples)} samples")
+        
+        return filtered_samples
+
+    def _prepare_chunks(self, samples) -> List[List[Sample]]:
         # Group samples by company_id into deques for O(1) popping
         samples_by_company = defaultdict(deque)
-        for sample in self.samples:
+        for sample in samples:
             samples_by_company[sample.company_id].append(sample)
         
         available_companies = list(samples_by_company.keys())
@@ -97,21 +164,21 @@ class MessageSelector:
             for cid in selected_cids:
                 current_chunk.append(samples_by_company[cid].popleft())
             
-            # 4. Filler Phase: Fill the remaining slots from the same selection
-            # Prioritize the companies that still have the most samples
+            # 4. Filler Phase: Fill remaining slots using weighted random selection
             remaining_needed = self.chunk_size - len(current_chunk)
             
             while remaining_needed > 0:
-                # Re-sort selection to keep it optimal, or just greedily drain the top
-                selected_cids.sort(key=lambda cid: len(samples_by_company[cid]), reverse=True)
+                # Filter companies that still have samples
+                active_cids = [cid for cid in selected_cids if samples_by_company[cid]]
+                if not active_cids:
+                    break
                 
-                cid = selected_cids[0]
-                take_amount = min(remaining_needed, len(samples_by_company[cid]))
+                # Weighted random selection based on remaining samples
+                weights = [len(samples_by_company[cid]) for cid in active_cids]
+                cid = self.rng.choices(active_cids, weights=weights)[0]
                 
-                for _ in range(take_amount):
-                    current_chunk.append(samples_by_company[cid].popleft())
-                
-                remaining_needed -= take_amount
+                current_chunk.append(samples_by_company[cid].popleft())
+                remaining_needed -= 1
 
             # 5. Finalize Chunk
             self.rng.shuffle(current_chunk)
@@ -127,15 +194,12 @@ class MessageSelector:
         Select the next chunk of messages.
 
         Returns:
-            List of GmailMessage objects for the current chunk
-
-        Raises:
-            ValueError: When all chunks have been exhausted
+            List of GmailMessage objects for the current chunk.
+            Returns empty list when all chunks have been exhausted.
         """
         if self._current_chunk_index >= len(self._chunks):
-            raise ValueError(
-                f"All chunks have been exhausted. Total chunks: {len(self._chunks)}"
-            )
+            print(f"⚠️ All chunks exhausted. Total chunks: {len(self._chunks)}")
+            return []
         
         # Get the current chunk of samples
         current_chunk_samples = self._chunks[self._current_chunk_index]
