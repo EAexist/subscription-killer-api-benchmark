@@ -5,7 +5,7 @@ on:
     inputs:
       data_branch:
         description: 'Data branch for benchmark results'
-        default: 'data'
+        default: 'data-test'
         required: true
 
 jobs:
