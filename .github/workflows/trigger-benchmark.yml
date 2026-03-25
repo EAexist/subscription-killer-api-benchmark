@@ -1,0 +1,47 @@
+name: "DEV: Trigger Benchmark "
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_branch:
+        description: 'Data branch for benchmark results'
+        default: 'data'
+        required: true
+
+jobs:
+  trigger-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Latest Image from GHCR
+        id: get_image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Logic: Get the latest tagged version of your backend image
+          # Adjust the 'package' name to match your specific GHCR image
+        run: |
+          # 1. Get the latest version tag from GHCR
+          # Replace 'YOUR_ORG' and 'YOUR_REPO' with your actual identifiers
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          
+          LATEST_TAG=$(gh api /repos/${{ github.repository }}/packages/container/SUBSCRIPTION_KILLER_BACKEND/versions \
+            --jq '.[0].metadata.container.tags[0]')
+          
+          FULL_IMAGE="ghcr.io/${REPO_LOWER}:${LATEST_TAG}"
+          
+          echo "Found Image: $FULL_IMAGE"
+          echo "image_name=$FULL_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Dispatch Benchmark Event
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{
+              "event_type": "new_ai_benchmark_build", 
+              "client_payload": {
+                "image_name": "${{ steps.get_image.outputs.image_name }}",
+                "branch": "${{ github.ref_name }}",
+                "data_branch": "${{ github.event.inputs.data_branch }}"
+              }
+            }'
