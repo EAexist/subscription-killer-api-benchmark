@@ -7,15 +7,18 @@ on:
         description: 'Data branch for benchmark results'
         default: 'data-test'
         required: true
-        
+
 jobs:
   trigger-benchmark:
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: read
     steps:
       - name: Fetch Latest Image from GHCR
         id: get_image
         env:
-          GH_TOKEN: ${{ secrets.PAT }} 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 1. Standardize names based on your Docker config
           OWNER="eaexist"
