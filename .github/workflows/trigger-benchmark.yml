@@ -7,7 +7,7 @@ on:
         description: 'Data branch for benchmark results'
         default: 'data-test'
         required: true
-
+        
 jobs:
   trigger-benchmark:
     runs-on: ubuntu-latest
@@ -15,18 +15,25 @@ jobs:
       - name: Fetch Latest Image from GHCR
         id: get_image
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Logic: Get the latest tagged version of your backend image
-          # Adjust the 'package' name to match your specific GHCR image
+          GH_TOKEN: ${{ secrets.PAT }} 
         run: |
-          # 1. Get the latest version tag from GHCR
-          # Replace 'YOUR_ORG' and 'YOUR_REPO' with your actual identifiers
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          # 1. Standardize names based on your Docker config
+          OWNER="eaexist"
+          PACKAGE_NAME="subscription-killer-api"
           
-          LATEST_TAG=$(gh api /repos/${{ github.repository }}/packages/container/SUBSCRIPTION_KILLER_BACKEND/versions \
+          echo "Fetching latest version for $OWNER/$PACKAGE_NAME..."
+
+          # 2. Use the /users/ endpoint for personal accounts (instead of /orgs/)
+          # We grab the first version [0] and its first tag [0]
+          LATEST_TAG=$(gh api "users/$OWNER/packages/container/$PACKAGE_NAME/versions" \
             --jq '.[0].metadata.container.tags[0]')
-          
-          FULL_IMAGE="ghcr.io/${REPO_LOWER}:${LATEST_TAG}"
+
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" == "null" ]; then
+            echo "::error::Could not find any tags for package $PACKAGE_NAME. Check if PAT has read:packages scope."
+            exit 1
+          fi
+
+          FULL_IMAGE="ghcr.io/$OWNER/$PACKAGE_NAME:$LATEST_TAG"
           
           echo "Found Image: $FULL_IMAGE"
           echo "image_name=$FULL_IMAGE" >> $GITHUB_OUTPUT
@@ -36,12 +43,12 @@ jobs:
           curl -X POST \
             -H "Authorization: token ${{ secrets.PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            https://api.github.com/repos/EAexist/subscription-killer-api-benchmark/dispatches \
             -d '{
               "event_type": "new_ai_benchmark_build", 
               "client_payload": {
                 "image_name": "${{ steps.get_image.outputs.image_name }}",
-                "branch": "${{ github.ref_name }}",
+                "branch": "chore/ai-benchmark-ci",
                 "data_branch": "${{ github.event.inputs.data_branch }}"
               }
             }'
