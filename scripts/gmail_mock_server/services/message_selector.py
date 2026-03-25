@@ -72,7 +72,7 @@ class MessageSelector:
         # Calculate total emails needed and required templates
         total_emails_needed = settings.n_emails_per_request * settings.n_requests
         samples_per_template = 10  # Fixed number of samples per template
-        n_companies = 8
+        n_companies = 20
         num_event_types = 5
         
         # Calculate required templates per event type (ceiling up)
