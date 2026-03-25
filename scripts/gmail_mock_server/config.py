@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     n_emails_per_request: int = Field(..., alias="N_EMAILS_PER_REQUEST")
 
     # Required field (no default value)
-    n_requests: int = Field(..., alias="N_REQUESTS")
+    n_requests: int = Field(..., alias="AI_BENCHMARK_K6_ITERATIONS")
     
     # Number of different companies per chunk (no default value)
     n_companies_per_chunk: int = Field(..., alias="N_COMPANIES_PER_CHUNK")
