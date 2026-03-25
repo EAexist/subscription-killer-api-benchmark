@@ -20,6 +20,7 @@ jobs:
     outputs:
       benchmark_dir: ${{ steps.extract-metadata.outputs.benchmark_dir }}
       app_git_tag: ${{ steps.extract-metadata.outputs.app_git_tag }}
+      run_id: ${{ steps.set-run-id.outputs.run_id }}
 
     steps:
       - name: Checkout code
@@ -112,7 +113,10 @@ jobs:
           docker tag ghcr.io/${OWNER}/gmail-mock-server:latest gmail-mock-server:latest
 
       - name: Set Run Id
-        run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+        run: |
+          echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+          echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+        id: set-run-id
 
       # TODO: Update benchmark script to output results directly to data-storage/results/runs/ instead of results/
       # This will eliminate the need for copying and use the data branch approach consistently
@@ -180,5 +184,5 @@ jobs:
     with:
       app_version: ${{ needs.run-benchmark.outputs.app_git_tag }}
       data_branch: ${{ inputs.data_branch }}
-      run_id: ${{ env.RUN_ID }}
+      run_id: ${{ needs.run-benchmark.outputs.run_id }}
     secrets: inherit
