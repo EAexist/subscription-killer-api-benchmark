@@ -8,13 +8,12 @@ This structure separates the "Source of Truth" (the CSVs) from the "Public View"
 data-storage/ (data branch)
 └── results/
     ├── raw/                          # One CSV per run
-    │   ├── benchmark_v1.0.0_20240308.csv
-    │   ├── benchmark_v1.0.1_20240309.csv
-    │   └── benchmark_v1.1.0_20240310.csv
+    │   └── .gitkeep                  # Placeholder directory
     ├── plots/                        # Visuals generated from ALL files in raw/
-    │   ├── cost_convergence_results.png
-    │   └── latency_trend_results.png
-    └── latest_summary.md             # High-level report
+    │   ├── amortized_ai_cost.png
+    │   ├── amortized_ai_cost_categorize_emails.png
+    │   └── amortized_ai_cost_extract_email_templates.png
+    └── latest_summary.md             # High-level report (to be created)
 ```
 
 ## Directory Usage
@@ -27,11 +26,12 @@ data-storage/ (data branch)
 
 ### `plots/`
 - **Purpose**: Generated visualizations from all raw data
-- **Contents**: PNG plots showing trends and comparisons
+- **Contents**: PNG plots showing amortized AI cost analysis
 - **Generation**: Automated by analytics scripts
 - **Examples**: 
-  - `cost_convergence_results.png` - Cost over time across versions
-  - `latency_trend_results.png` - Latency trends across versions
+  - `amortized_ai_cost.png` - Overall amortized AI cost analysis
+  - `amortized_ai_cost_categorize_emails.png` - Cost analysis for email categorization
+  - `amortized_ai_cost_extract_email_templates.png` - Cost analysis for email template extraction
 
 ### `latest_summary.md`
 - **Purpose**: High-level executive summary

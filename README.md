@@ -1,6 +1,6 @@
 # AI Operational Cost Benchmarks
 
-This **Data & Results Branch** presents AI operational cost benchmark results for Subsciption Killer API.
+This is AI operational cost benchmark results for each development version of Subsciption Killer API.
 
 ---
 
@@ -10,14 +10,15 @@ This **Data & Results Branch** presents AI operational cost benchmark results fo
 ## 📈 Visualized Results
 
 ### 1. Amortized Cost
-This visualization tracks how the average cost per request stabilizes over time. This estimates long-term budget forecasting.
+
+Amortized cost of AI operations as the number of requests increases. Decrease by requests implies effect of cache hits. 
 
 ![Total Amortized Cost](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost.png)
 
 ---
 
 ### 2. Task-Specific Cost Breakdown
-This visulizations decompose the total operational cost into each AI-backed tasks.
+Decomposition of total operational cost into each AI-backed tasks.
 
 ![Email Categorization Task Costs](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost_categorize_emails.png)
 ![Email Template Extraction Task Costs](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png)
