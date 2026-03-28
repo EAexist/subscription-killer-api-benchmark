@@ -270,8 +270,8 @@ class LangfuseDataClient:
                     return pd.DataFrame()
 
         trace_to_index = {
-            t.id: int(next((tag.replace("req_", "") for tag in t.tags if tag.startswith("req_")), None))
-            if next((tag.replace("req_", "") for tag in t.tags if tag.startswith("req_")), None) is not None
+            t.id: int(next((tag.replace("request_", "") for tag in t.tags if tag.startswith("request_")), None))
+            if next((tag.replace("request_", "") for tag in t.tags if tag.startswith("request_")), None) is not None
             else None
             for t in traces
         }

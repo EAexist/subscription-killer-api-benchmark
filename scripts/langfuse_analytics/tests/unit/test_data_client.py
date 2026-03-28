@@ -34,7 +34,7 @@ class TestLangfuseDataClient(unittest.TestCase):
         # Mock traces with proper pagination metadata
         mock_trace = MagicMock()
         mock_trace.id = "trace-1"
-        mock_trace.tags = ["req_1"]
+        mock_trace.tags = ["request_1"]
         
         # Create mock response for traces with proper pagination
         mock_trace_response = MagicMock()
