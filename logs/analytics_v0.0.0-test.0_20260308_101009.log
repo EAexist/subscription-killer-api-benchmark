@@ -1,6 +1,0 @@
-Log started at 2026-03-08 10:10:09.245727
-2026-03-08 10:10:09,245 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.0
-2026-03-08 10:10:09,389 - INFO - 📊 Fetching data from Langfuse...
-2026-03-08 10:10:09,389 - INFO - 📊 Fetching generations for tag: v0.0.0-test.0...
-2026-03-08 10:10:09,928 - INFO - ✅ Found 0 generations for app_version v0.0.0-test.0
-2026-03-08 10:10:09,928 - ERROR - ❌ No data found in Langfuse
