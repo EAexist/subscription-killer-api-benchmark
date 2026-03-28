@@ -25,13 +25,14 @@ function generateUUID() {
     });
 }
 
-// Create HTTP request parameters with unique user ID
-function createRequestParams() {
+// Create HTTP request parameters with unique user ID and iteration index
+function createRequestParams(iterationNum) {
     const userId = generateUUID();
     return {
         headers: {
             'Content-Type': 'application/json',
             'X-Benchmark-User-Id': userId,
+            'X-K6-Index': iterationNum.toString(),
         },
     };
 }
@@ -41,7 +42,7 @@ function executeRequest(iterationType, iterationNum, totalIterations) {
     console.log(`[${iterationType}] ${iterationType} iteration ${iterationNum}/${totalIterations}`);
     console.log("Sending POST request...");
 
-    const requestParams = createRequestParams();
+    const requestParams = createRequestParams(iterationNum);
     requestParams.timeout = REQUEST_TIMEOUT
     const userId = requestParams.headers['X-Benchmark-User-Id'];
     console.log(`Generated User ID: ${userId}`);
