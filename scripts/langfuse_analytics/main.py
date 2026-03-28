@@ -164,13 +164,7 @@ def main():
         logger.info(f"- Total records: {len(merged_df)}")
 
         if "task_name" in merged_df.columns:
-            logger.info(f"- Task names: {merged_df['task_name'].unique()}")
-
-        if "cost_total" in merged_df.columns:
-            logger.info(f"- Total cost: ${merged_df['cost_total'].sum():.6f}")
-            logger.info(
-                f"- Average cost per request: ${merged_df['cost_total'].mean():.6f}"
-            )
+            logger.info(f"- Task names: {merged_df['task_name'].unique().tolist()}")
 
         logger.info("\n🎉 Analytics pipeline completed successfully!")
 

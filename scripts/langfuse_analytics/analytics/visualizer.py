@@ -111,7 +111,6 @@ class BenchmarkVisualizer:
         # Professional integrated legend
         plt.legend(
             legend_labels, 
-            fontsize=10, 
             loc='upper right', 
             frameon=True, 
             edgecolor='#BBBBBB'

@@ -72,7 +72,7 @@ def apply_custom_style():
         "axes.labelsize": 16,
         "xtick.labelsize": 14,
         "ytick.labelsize": 14,
-        "legend.fontsize": 14,
+        "legend.fontsize": 16,
         # --- Grid ---
         "axes.grid": True,
         "grid.alpha": 0.3,

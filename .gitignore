@@ -66,6 +66,7 @@ MANIFEST
 scripts/gmail_mock_server/dataset
 
 *deprecated*
+
 /data-storage/**
 !/data-storage/**/
 !/data-storage/**/.gitkeep
