@@ -63,18 +63,20 @@ class BenchmarkVisualizer:
         show_plot: bool = False,
     ) -> None:
         """
-        Plot cost convergence data.
+        Plot cost convergence data with professional integrated legend approach.
 
-        Expects a DataFrame with: ['request_index', 'amortized_cost', 'version']
+        Expects a DataFrame with: ['request_index', 'amortized_cost', 'app_version']
 
         Args:
             df_subset: DataFrame with trace data
             output_path: Path to save the plot
+            title: Plot title
+            x_label: X-axis label
             show_plot: If True, display the plot interactively
         """
         plt.figure(figsize=(12, 8))
 
-        # Simple Plotting Logic
+        # Plot lines with default colors (no labels first)
         for impl in df_subset["app_version"].unique():
             data = df_subset[df_subset["app_version"] == impl]
             # Convert cost to $ per thousand requests
@@ -82,23 +84,48 @@ class BenchmarkVisualizer:
             plt.plot(
                 data["request_index"],
                 cost_per_thousand,
-                label=impl,
             )
+
+        # Generate professional integrated legend labels
+        legend_labels = []
+        for impl in df_subset["app_version"].unique():
+            data = df_subset[df_subset["app_version"] == impl]
+            
+            # Calculate convergence metrics
+            final_data = data["amortized_cost"].iloc[-30:]  # Last 30 points
+            mean_cost = final_data.mean() * 1_000  # Convert to $ per thousand
+            std_cost = final_data.std() * 1_000
+            
+            # Determine convergence status
+            cv = std_cost / mean_cost if mean_cost > 0 else 1.0
+            status = "Converged" if cv < 0.05 else "Stabilizing"
+            
+            # Create professional legend label
+            legend_label = f"{impl} | {status} | ${mean_cost:.2f}/1k request"
+            legend_labels.append(legend_label)
 
         plt.title(title)
         plt.xlabel("Number of Requests")
         plt.ylabel(f"{x_label}($ per thousand requests)")
-        plt.legend()
+        
+        # Professional integrated legend
+        plt.legend(
+            legend_labels, 
+            fontsize=10, 
+            loc='upper right', 
+            frameon=True, 
+            edgecolor='#BBBBBB'
+        )
         plt.grid(True, alpha=0.3)
 
         plt.ylim(0)
         max_request_index = df_subset["request_index"].max()
         plt.xlim(0, max_request_index)
 
-        # Set x-axis ticks every 5 units
+        # Set x-axis ticks using the full range
         self._set_smart_ticks(df_subset["request_index"].unique())
 
-        # 2. Add 10% padding to the upper limit
+        # Add 10% padding to the upper limit
         max_cost = df_subset["amortized_cost"].max() * 1_000
 
         if max_cost > 0:
