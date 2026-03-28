@@ -31,9 +31,8 @@ class TestLoader(unittest.TestCase):
         """Get a valid CSV data structure that matches EXPECTED_COLUMNS."""
         return {
             "id": [1, 2],
-            "timestamp": ["2023-01-01T10:00:00", "2023-01-01T11:00:00"],
+            "request_index": [1, 2],
             "app_version": ["v1", "v1"],
-            "trace_id": ["trace1", "trace2"],
             "task_name": ["task1", "task2"],
             "input_tokens": [10, 15],
             "instruction_tokens": [5, 7],
@@ -51,9 +50,8 @@ class TestLoader(unittest.TestCase):
         """Get a variant of valid CSV data for testing multiple files."""
         return {
             "id": [3, 4],
-            "timestamp": ["2023-01-01T12:00:00", "2023-01-01T13:00:00"],
+            "request_index": [1, 2],
             "app_version": ["v2", "v2"],
-            "trace_id": ["trace3", "trace4"],
             "task_name": ["task3", "task4"],
             "input_tokens": [20, 25],
             "instruction_tokens": [10, 12],
@@ -111,15 +109,15 @@ class TestLoader(unittest.TestCase):
 
     def test_load_and_merge_csv_files_empty_directory(self):
         """Test load_and_merge_csv_files with empty directory."""
-        # Patch RAW_DATA_DIR to use temp directory as Path object
-        with patch("analytics.loader.RAW_DATA_DIR", Path(self.temp_dir)):
+        # Patch get_raw_data_dir to use temp directory as Path object
+        with patch("analytics.loader.get_raw_data_dir", return_value=Path(self.temp_dir)):
             result = load_and_merge_csv_files()
             self.assertTrue(result.empty)
 
     def test_load_and_merge_csv_files_nonexistent_directory(self):
         """Test load_and_merge_csv_files with nonexistent directory."""
-        # Temporarily patch RAW_DATA_DIR to a nonexistent path
-        with patch("analytics.loader.RAW_DATA_DIR", "/nonexistent/path"):
+        # Temporarily patch get_raw_data_dir to a nonexistent path
+        with patch("analytics.loader.get_raw_data_dir", return_value=Path("/nonexistent/path")):
             with self.assertRaises(FileNotFoundError):
                 load_and_merge_csv_files()
 
@@ -138,19 +136,20 @@ class TestLoader(unittest.TestCase):
         df1.to_csv(csv1_path, index=False)
         df2.to_csv(csv2_path, index=False)
 
-        # Test merging with patched RAW_DATA_DIR as Path object
-        with patch("analytics.loader.RAW_DATA_DIR", Path(self.temp_dir)):
+        # Test merging with patched get_raw_data_dir as Path object
+        with patch("analytics.loader.get_raw_data_dir", return_value=Path(self.temp_dir)):
             result = load_and_merge_csv_files()
 
             # Verify results
             self.assertEqual(len(result), 4)  # 2 rows from each file
             self.assertIn("id", result.columns)
-            self.assertIn("timestamp", result.columns)
+            self.assertIn("request_index", result.columns)
             self.assertIn("app_version", result.columns)
             self.assertIn("cost_total", result.columns)
 
             # Verify data integrity
             self.assertEqual(result["id"].tolist(), [1, 2, 3, 4])
+            self.assertEqual(result["request_index"].tolist(), [1, 2, 1, 2])
             self.assertEqual(result["app_version"].tolist(), ["v1", "v1", "v2", "v2"])
 
     def test_load_and_merge_csv_files_with_mixed_files(self):
@@ -166,8 +165,8 @@ class TestLoader(unittest.TestCase):
         with open(txt_path, "w") as f:
             f.write("This is not a CSV file")
 
-        # Test loading with patched RAW_DATA_DIR as Path object (should only load CSV files)
-        with patch("analytics.loader.RAW_DATA_DIR", Path(self.temp_dir)):
+        # Test loading with patched get_raw_data_dir as Path object (should only load CSV files)
+        with patch("analytics.loader.get_raw_data_dir", return_value=Path(self.temp_dir)):
             result = load_and_merge_csv_files()
 
             # Verify only CSV data was loaded

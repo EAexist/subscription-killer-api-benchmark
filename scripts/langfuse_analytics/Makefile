@@ -20,9 +20,9 @@ MARKER_FILTER ?= -m "not integration"
 
 test:
 	@echo "Running tests..."
-	$(PYTHON) -m pytest tests/ $(MARKER_FILTER) $(ARGS) -s
+	@$(PYTHON) -c "import os; [exec(line.strip()) for line in open('.env.test') if line.strip() and not line.startswith('#')]" && $(PYTHON) -m pytest tests/ $(MARKER_FILTER) $(ARGS) -s --log-cli-level=DEBUG
 
 clean:
 	@echo "Cleaning environment..."
-	rm -rf $(VENV)
-	find . -type d -name "__pycache__" -exec rm -rf {} +
+	rmdir /s /q $(VENV)
+	for /d /r . %%d in (__pycache__) do @rmdir /s /q "%%d"

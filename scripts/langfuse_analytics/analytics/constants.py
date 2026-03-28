@@ -12,8 +12,7 @@ class ExpectedColumns(Enum):
 
     # Core identifiers
     ID = "id"
-    TRACE_ID = "trace_id"
-    TIMESTAMP = "timestamp"
+    REQUEST_INDEX = "request_index"
     TASK_NAME = "task_name"
     APP_VERSION = "app_version"
 
@@ -31,12 +30,11 @@ class ExpectedColumns(Enum):
     COST_TOTAL = "cost_total"
 
 
-# Ground truth column list based on transform_to_dataframe method
+# Ground truth column list based on actual CSV structure
 EXPECTED_COLUMNS: FrozenSet[str] = frozenset(
     [
         ExpectedColumns.ID.value,
-        ExpectedColumns.TRACE_ID.value,
-        ExpectedColumns.TIMESTAMP.value,
+        ExpectedColumns.REQUEST_INDEX.value,
         ExpectedColumns.TASK_NAME.value,
         ExpectedColumns.APP_VERSION.value,
         ExpectedColumns.INPUT_TOKENS.value,
@@ -55,7 +53,7 @@ EXPECTED_COLUMNS: FrozenSet[str] = frozenset(
 REQUIRED_COLUMNS: FrozenSet[str] = frozenset(
     [
         ExpectedColumns.ID.value,
-        ExpectedColumns.TIMESTAMP.value,
+        ExpectedColumns.REQUEST_INDEX.value,
         ExpectedColumns.APP_VERSION.value,
     ]
 )
@@ -64,6 +62,8 @@ REQUIRED_COLUMNS: FrozenSet[str] = frozenset(
 OPTIONAL_COLUMNS: FrozenSet[str] = frozenset(
     [
         ExpectedColumns.TASK_NAME.value,
-        ExpectedColumns.TRACE_ID.value,
+        ExpectedColumns.INPUT_TOKENS_PER_ITEM.value,
+        ExpectedColumns.OUTPUT_TOKENS_PER_ITEM.value,
+        ExpectedColumns.INSTRUCTION_TOKENS.value,
     ]
 )

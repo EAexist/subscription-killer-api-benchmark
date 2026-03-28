@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from .config import PLOTS_DIR, apply_custom_style
+from .config import get_plots_dir, apply_custom_style
 
 
 class BenchmarkVisualizer:
@@ -17,10 +17,42 @@ class BenchmarkVisualizer:
     def __init__(self):
         """Initialize visualizer with output directory."""
 
-        self.output_dir = PLOTS_DIR
+        self.output_dir = get_plots_dir()
         os.makedirs(self.output_dir, exist_ok=True)
 
         apply_custom_style()
+
+
+    def plot_marginal_cost(
+        self,
+        df_subset: pd.DataFrame,
+        output_path: str,
+        title: str,
+        x_label: str,
+        ):
+        
+        mean_cost = df_subset['marginal_cost'].mean()
+        std_dev = df_subset['marginal_cost'].std()
+
+        # 2. Plotting the Bar with Variance
+        plt.figure(figsize=(6, 8))
+        plt.bar(['Avg Cost per Request'], [mean_cost], yerr=[std_dev], 
+                color='#4CAF50',  # Professional green
+                capsize=12,       # Adds horizontal lines to the error bar
+                edgecolor='black', 
+                alpha=0.8)
+
+        # 3. Add Reporting Annotations
+        plt.ylabel('Cost (USD)')
+        plt.title('Backend AI Cost Stability Analysis')
+        plt.grid(axis='y', linestyle='--', alpha=0.5)
+
+        # Optional: Label the actual values on the chart
+        plt.text(0, mean_cost / 2, f'Amortized: ${mean_cost:.2f}', ha='center', color='white', weight='bold')
+        plt.text(0, mean_cost + std_dev + 0.02, f'Volatility (±${std_dev:.2f})', ha='center', color='darkred')
+
+        plt.tight_layout()
+        plt.savefig('backend_cost_report.png') 
 
     def plot_cost_convergence(
         self,
@@ -54,7 +86,7 @@ class BenchmarkVisualizer:
             )
 
         plt.title(title)
-        plt.xlabel("Request")
+        plt.xlabel("Number of Requests")
         plt.ylabel(f"{x_label}($ per thousand requests)")
         plt.legend()
         plt.grid(True, alpha=0.3)
@@ -64,9 +96,7 @@ class BenchmarkVisualizer:
         plt.xlim(0, max_request_index)
 
         # Set x-axis ticks every 5 units
-        tick_positions = range(0, int(max_request_index) + 1, 5)
-        plt.xticks(tick_positions)
-
+        self._set_smart_ticks(df_subset["request_index"].unique())
 
         # 2. Add 10% padding to the upper limit
         max_cost = df_subset["amortized_cost"].max() * 1_000
@@ -84,7 +114,25 @@ class BenchmarkVisualizer:
         else:
             plt.close()
 
-
+    def _set_smart_ticks(self, x_data, n_max=10, base=5):
+        """
+        Sets x-axis ticks to multiples of 'base' ensuring 
+        the total number of ticks is less than 'n_max'.
+        """
+        x_min, x_max = min(x_data), max(x_data)
+        x_range = x_max - x_min
+        
+        step = base
+        # Increase step by 'base' until we are under the limit N
+        while (x_range / step) >= n_max:
+            step += base
+            
+        # Generate ticks: start at the first multiple of 'step' >= x_min
+        start = (x_min // step) * step
+        ticks = range(int(start), int(x_max) + step, step)
+        
+        plt.xticks(ticks)
+        return step
 #     def generate_markdown_table(
 #         self, df: pd.DataFrame, output_file: Optional[str] = None
 #     ) -> str:

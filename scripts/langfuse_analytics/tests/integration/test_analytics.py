@@ -20,19 +20,25 @@ class TestAnalytics(unittest.TestCase):
         not (os.getenv("LANGFUSE_SECRET_KEY") and os.getenv("LANGFUSE_PUBLIC_KEY")),
         reason="Langfuse credentials not available",
     )
-    @pytest.mark.capture_output
+    # @pytest.mark.capture_output
     def test_analytics(self):
         """Test main() method with real Langfuse data."""
+        original_argv = sys.argv  # Initialize outside try block
         try:
-            # Mock sys.argv to include the required --app-version argument
-            original_argv = sys.argv
-            sys.argv = ["main.py", "--app-version", os.getenv("TEST_APP_VERSION")]
+            # Mock sys.argv to include all required arguments
+            test_app_version = os.getenv("TEST_APP_VERSION")
+            if not test_app_version:
+                self.fail("TEST_APP_VERSION environment variable is required for integration test")
+            
+            sys.argv = [
+                "main.py", 
+                "--app-version", test_app_version,
+                "--run-id", "test-run-123",
+                "--analytics-run-id", "test-analytics-456"
+            ]
 
             # Call main() directly - it will use its own logic
             main()
-
-            # Restore original sys.argv
-            sys.argv = original_argv
 
             # Verify that the pipeline completed successfully
             # (main() will print success message or exit with error)
@@ -40,15 +46,16 @@ class TestAnalytics(unittest.TestCase):
 
         except SystemExit as e:
             # Restore original sys.argv even if SystemExit occurs
-            if 'original_argv' in locals():
-                sys.argv = original_argv
+            sys.argv = original_argv
             if e.code != 0:
                 self.fail(f"Main() exited with error code: {e.code}")
         except Exception as e:
             # Restore original sys.argv for any other exception
-            if 'original_argv' in locals():
-                sys.argv = original_argv
+            sys.argv = original_argv
             self.fail(f"Main() integration test failed: {e}")
+        finally:
+            # Always restore original sys.argv
+            sys.argv = original_argv
 
 
 if __name__ == "__main__":

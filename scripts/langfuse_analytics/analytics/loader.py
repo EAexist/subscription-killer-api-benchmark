@@ -7,8 +7,8 @@ import os
 
 import pandas as pd
 
-from .config import CSV_NAMING_PATTERN, RAW_DATA_DIR
-from .constants import EXPECTED_COLUMNS, REQUIRED_COLUMNS
+from .config import CSV_NAMING_PATTERN, get_raw_data_dir
+from .constants import EXPECTED_COLUMNS, REQUIRED_COLUMNS, OPTIONAL_COLUMNS
 
 
 def save_raw_data(
@@ -21,8 +21,9 @@ def save_raw_data(
 
     date_str = datetime.now().strftime("%Y%m%d")
     filename = CSV_NAMING_PATTERN.format(version=app_version, date=date_str)
-    csv_path = RAW_DATA_DIR / filename
-    os.makedirs(RAW_DATA_DIR, exist_ok=True)
+    raw_data_dir = get_raw_data_dir()
+    csv_path = raw_data_dir / filename
+    os.makedirs(raw_data_dir, exist_ok=True)
     df.to_csv(csv_path, index=False)
     print(f"💾 Raw data saved to: {csv_path}")
     return str(csv_path)
@@ -31,10 +32,11 @@ def save_raw_data(
 def load_and_merge_csv_files() -> pd.DataFrame:
     """Load all CSV files from data directory and merge them."""
 
-    csv_files = [f for f in os.listdir(RAW_DATA_DIR) if f.endswith(".csv")]
+    raw_data_dir = get_raw_data_dir()
+    csv_files = [f for f in os.listdir(raw_data_dir) if f.endswith(".csv")]
 
     if not csv_files:
-        print(f"❌ No CSV files found in directory: {RAW_DATA_DIR}")
+        print(f"❌ No CSV files found in directory: {raw_data_dir}")
         return pd.DataFrame()
 
     print(f"📁 Found {len(csv_files)} CSV files: {csv_files}")
@@ -42,7 +44,7 @@ def load_and_merge_csv_files() -> pd.DataFrame:
     dataframes = []
     for csv_file in csv_files:
         try:
-            csv_path = RAW_DATA_DIR / csv_file
+            csv_path = raw_data_dir / csv_file
             df = pd.read_csv(csv_path)
 
             # Validate CSV structure against expected schema
@@ -63,6 +65,13 @@ def load_and_merge_csv_files() -> pd.DataFrame:
             if not has_valid_data:
                 print(f"  Skipping {csv_file}: No valid data found in required columns")
                 continue
+
+            # Warn about missing optional columns but still load the file
+            missing_optional = OPTIONAL_COLUMNS - df_columns
+            if missing_optional:
+                print(
+                    f"  ⚠️  {csv_file}: Missing optional columns: {sorted(missing_optional)}"
+                )
 
             # Warn about unexpected columns but still load the file
             unexpected_columns = df_columns - EXPECTED_COLUMNS

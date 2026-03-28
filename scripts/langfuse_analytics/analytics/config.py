@@ -8,13 +8,21 @@ from pathlib import Path
 
 # Base directory detection
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-DATA_STORAGE_ROOT = Path(
-    os.getenv("DATA_STORAGE_ROOT", str(PROJECT_ROOT / "data-storage"))
-)
 
-# Data paths
-RAW_DATA_DIR = DATA_STORAGE_ROOT / "results" / "raw"
-PLOTS_DIR = DATA_STORAGE_ROOT / "results" / "plots"
+def get_data_storage_root():
+    """Get data storage root directory lazily."""
+    return Path(
+        os.getenv("DATA_STORAGE_ROOT", str(PROJECT_ROOT / "data-storage"))
+    )
+
+# Data paths (lazy evaluation)
+def get_raw_data_dir():
+    """Get raw data directory lazily."""
+    return get_data_storage_root() / "results" / "raw"
+
+def get_plots_dir():
+    """Get plots directory lazily."""
+    return get_data_storage_root() / "results" / "plots"
 
 # File naming patterns
 CSV_NAMING_PATTERN = "benchmark_{version}_{date}.csv"
@@ -25,16 +33,24 @@ DEFAULT_RETRY_COUNT = 5
 DEFAULT_INITIAL_DELAY = 60
 MAX_REQUEST_INDEX_TICKS = 5
 
-# API endpoints and secrets
-LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
-LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
-LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+# API endpoints and secrets (lazy evaluation)
+def get_langfuse_host():
+    """Get Langfuse host lazily."""
+    return os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+
+def get_langfuse_secret_key():
+    """Get Langfuse secret key lazily."""
+    return os.getenv("LANGFUSE_SECRET_KEY")
+
+def get_langfuse_public_key():
+    """Get Langfuse public key lazily."""
+    return os.getenv("LANGFUSE_PUBLIC_KEY")
 
 
 # Ensure directories exist when imported
 def ensure_directories():
     """Create data directories if they don't exist."""
-    for directory in [RAW_DATA_DIR, PLOTS_DIR]:
+    for directory in [get_raw_data_dir(), get_plots_dir()]:
         os.makedirs(directory, exist_ok=True)
 
 

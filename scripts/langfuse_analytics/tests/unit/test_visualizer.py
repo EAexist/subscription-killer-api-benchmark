@@ -16,19 +16,18 @@ class TestBenchmarkVisualizer(unittest.TestCase):
         shutil.rmtree(self.temp_dir)
 
     def test_visualizer_init(self):
-        """Test that BenchmarkVisualizer initializes with output directory."""
-        visualizer = BenchmarkVisualizer(self.temp_dir)
-        self.assertEqual(visualizer.output_dir, self.temp_dir)
-        self.assertTrue(os.path.exists(self.temp_dir))
+        """Test that BenchmarkVisualizer initializes with default output directory."""
+        visualizer = BenchmarkVisualizer()
+        self.assertIsNotNone(visualizer.output_dir)
+        self.assertTrue(os.path.exists(visualizer.output_dir))
 
     def test_plot_cost_convergence(self):
         """Test that cost convergence plot is generated and saved."""
         # Create test data with multiple versions and trace_ids
         data = {
-            "timestamp": pd.date_range("2023-01-01", periods=4, freq="h"),
+            "request_index": [1, 2, 3, 4],
             "total_cost": [0.1, 0.08, 0.06, 0.05],
             "app_version": ["v1", "v1", "v2", "v2"],
-            "trace_id": ["trace1", "trace2", "trace3", "trace4"],
         }
         df = pd.DataFrame(data)
 

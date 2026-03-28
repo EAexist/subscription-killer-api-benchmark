@@ -13,15 +13,17 @@ from datetime import datetime
 
 from analytics.calculator import BenchmarkCalculator
 from analytics.langfuse_client import LangfuseDataClient
+from analytics.config import (
+    CSV_NAMING_PATTERN,
+    get_data_storage_root,
+)
 from analytics.loader import load_and_merge_csv_files, save_raw_data
 from analytics.visualizer import BenchmarkVisualizer
 
 
 def setup_logging(app_version: str, run_id: str, analytics_run_id: str):
     """Setup logging to both console and file with UTF-8 support."""
-    data_storage_root = os.getenv(
-        "DATA_STORAGE_ROOT", os.path.join(os.getcwd(), "..", "..", "data-storage")
-    )
+    data_storage_root = get_data_storage_root()
     logs_dir = Path(data_storage_root) / "logs"/ app_version
 
     # Create all directories in the chain
@@ -86,22 +88,18 @@ def main():
     try:
         # 1. Fetch data from Langfuse
         logger.info("📊 Fetching data from Langfuse...")
-        # Fetch without expected count for now (can be added later if needed)
+        
+        # Fetch with expected count - AI_BENCHMARK_K6_ITERATIONS is required
         expected_count = os.getenv("AI_BENCHMARK_K6_ITERATIONS")
-        generations = client.fetch_benchmark_generations(
-            app_version=app_version,
-            expected_count=int(expected_count) if expected_count else None,
-        )
-
-        if not generations:
-            logger.error("❌ No data found in Langfuse")
+        if not expected_count:
+            logger.error("❌ AI_BENCHMARK_K6_ITERATIONS environment variable is required")
+            logger.error("Please set AI_BENCHMARK_K6_ITERATIONS in your .env.test file")
             return
-
-        logger.info(f"✅ Found {len(generations)} generations")
-
-        # Transform to DataFrame
-        df = client.transform_to_dataframe(generations)
-        logger.info(f"📋 DataFrame shape: {df.shape}")
+        
+        df = client.fetch_benchmark_generations(
+            app_version=app_version,
+            expected_count=int(expected_count),
+        )
 
         # 2. Save raw data as CSV
         logger.info("💾 Saving raw data...")
@@ -120,9 +118,14 @@ def main():
         # 4. Generate convergence plot
         logger.info("📈 Generating convergence plot...")
 
-        # Generate total cost plot
+        # Fill missing requests up to expected count first
+        df_complete = BenchmarkCalculator.fill_missing_requests(
+            merged_df, int(expected_count)
+        )
+        
+        # Generate total cost plot with complete data
         df_with_cma = BenchmarkCalculator.add_convergence_metrics(
-            merged_df, "cost_total"
+            df_complete, "cost_total"
         )
 
         plot_path = os.path.join(visualizer.output_dir, "amortized_ai_cost.png")
@@ -132,12 +135,12 @@ def main():
             "Amortized AI Operational Cost per Request",
             "Amortized Cost",
         )
-        logger.info(f"✅ Convergence plot saved to: {plot_path}")
+        logger.info(f"✅ Amortized cost plot saved to: {plot_path}")
 
         # Generate task-specific plots if task_name column exists
-        if "task_name" in merged_df.columns:
-            for task_name in merged_df["task_name"].unique():
-                task_df = merged_df[merged_df["task_name"] == task_name]
+        if "task_name" in df_complete.columns:
+            for task_name in df_complete["task_name"].unique():
+                task_df = df_complete[df_complete["task_name"] == task_name]
                 if not task_df.empty:
                     # Total Cost
                     task_cma = BenchmarkCalculator.add_convergence_metrics(
