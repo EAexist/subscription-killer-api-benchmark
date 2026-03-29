@@ -1,0 +1,50 @@
+Log started at 2026-03-29 18:01:56.371368 🚀
+2026-03-29 18:01:56,371 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/v0.1.0-perf.1+test/analytics__23703995201_20260329_180156.log
+2026-03-29 18:01:56,371 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.1.0-perf.1+test, run_id: , analytics_run_id: 23703995201
+2026-03-29 18:01:56,448 - INFO - 📊 Fetching data from Langfuse...
+2026-03-29 18:01:56,448 - INFO - 📊 Fetching generations for version: v0.1.0-perf.1+test...
+2026-03-29 18:01:56,448 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-03-29 18:01:57,896 - INFO - 📊 Retrieved 100 traces from page 1, total so far: 100
+2026-03-29 18:01:57,896 - INFO - 🔍 Traces page info: current=1, total_pages=4
+2026-03-29 18:01:57,896 - INFO - 📄 More trace pages available, fetching page 2
+2026-03-29 18:01:57,896 - INFO - 🔄 Fetching traces page 2 with limit 100
+2026-03-29 18:01:59,278 - INFO - 📊 Retrieved 100 traces from page 2, total so far: 200
+2026-03-29 18:01:59,278 - INFO - 🔍 Traces page info: current=2, total_pages=4
+2026-03-29 18:01:59,278 - INFO - 📄 More trace pages available, fetching page 3
+2026-03-29 18:01:59,278 - INFO - 🔄 Fetching traces page 3 with limit 100
+2026-03-29 18:02:00,520 - INFO - 📊 Retrieved 100 traces from page 3, total so far: 300
+2026-03-29 18:02:00,520 - INFO - 🔍 Traces page info: current=3, total_pages=4
+2026-03-29 18:02:00,520 - INFO - 📄 More trace pages available, fetching page 4
+2026-03-29 18:02:00,520 - INFO - 🔄 Fetching traces page 4 with limit 100
+2026-03-29 18:02:01,603 - INFO - 📊 Retrieved 100 traces from page 4, total so far: 400
+2026-03-29 18:02:01,603 - INFO - 🔍 Traces page info: current=4, total_pages=4
+2026-03-29 18:02:01,603 - INFO - 🏁 Reached final traces page 4/4
+2026-03-29 18:02:01,603 - INFO - ✅ Found all 400 generations for app_version v0.1.0-perf.1+test
+2026-03-29 18:02:01,604 - INFO - 🔄 Making initial generations request with limit: 100
+2026-03-29 18:02:01,976 - INFO - 📊 Retrieved 100 generations, total so far: 100
+2026-03-29 18:02:01,976 - INFO - 📄 Found cursor, fetching next generations page...
+2026-03-29 18:02:01,976 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTAzLTI5VDA3OjIxOjU5LjUwNloiLCJsYXN0VHJhY2VJZCI6Ijk3NjVlYjA2MTIxNzA5YmE3ZDZkMTk0YWZmYzkxNTNhIiwibGFzdElkIjoiYTIxYzY0N2I3ZGU4ZDBhMyJ9
+2026-03-29 18:02:02,345 - INFO - 📊 Retrieved 100 generations, total so far: 200
+2026-03-29 18:02:02,345 - INFO - 📄 Found cursor, fetching next generations page...
+2026-03-29 18:02:02,345 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTAzLTI5VDA3OjIxOjQ2LjQxN1oiLCJsYXN0VHJhY2VJZCI6Ijg2MzJhNjQ3MWU2ZjZmMzlmYTFlZTI4Mjc3ZjAxYzYzIiwibGFzdElkIjoiOGU3MjZhYmY0NTkwNThkNSJ9
+2026-03-29 18:02:02,701 - INFO - 📊 Retrieved 100 generations, total so far: 300
+2026-03-29 18:02:02,701 - INFO - 📄 Found cursor, fetching next generations page...
+2026-03-29 18:02:02,701 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTAzLTI5VDA3OjIxOjM0LjAxMVoiLCJsYXN0VHJhY2VJZCI6IjVmNGE1NjE0NDBlNjA1Zjc3MDkzYTk1YTg2YTFiODM1IiwibGFzdElkIjoiMGM2OWQzNTFjNWRmNGZmNiJ9
+2026-03-29 18:02:03,038 - INFO - 📊 Retrieved 2 generations, total so far: 302
+2026-03-29 18:02:03,038 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-03-29 18:02:03,038 - INFO - ✅ Found 302 generations
+2026-03-29 18:02:03,097 - INFO - 📋 DataFrame shape: (302, 13)
+2026-03-29 18:02:03,098 - INFO - 💾 Saving raw data...
+2026-03-29 18:02:03,101 - INFO - 📂 Loading and merging all CSV files...
+2026-03-29 18:02:03,104 - INFO - 📋 Merged DataFrame shape: (302, 13)
+2026-03-29 18:02:03,104 - INFO - 📈 Generating convergence plot...
+2026-03-29 18:02:03,622 - INFO - ✅ Amortized cost plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost.png
+2026-03-29 18:02:04,120 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_categorize_emails.png
+2026-03-29 18:02:04,625 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png
+2026-03-29 18:02:04,625 - INFO - 
+📊 Summary:
+2026-03-29 18:02:04,625 - INFO - - Raw data: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/raw/benchmark_v0.1.0-perf.1+test_20260329.csv
+2026-03-29 18:02:04,625 - INFO - - Total records: 302
+2026-03-29 18:02:04,625 - INFO - - Task names: ['categorize_emails', 'extract_email_templates']
+2026-03-29 18:02:04,626 - INFO - 
+🎉 Analytics pipeline completed successfully!
