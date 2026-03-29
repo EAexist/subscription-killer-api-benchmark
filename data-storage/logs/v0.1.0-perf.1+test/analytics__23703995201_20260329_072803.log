@@ -1,0 +1,22 @@
+Log started at 2026-03-29 07:28:03.917807 🚀
+2026-03-29 07:28:03,917 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/v0.1.0-perf.1+test/analytics__23703995201_20260329_072803.log
+2026-03-29 07:28:03,917 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.1.0-perf.1+test, run_id: , analytics_run_id: 23703995201
+2026-03-29 07:28:03,995 - INFO - 📊 Fetching data from Langfuse...
+2026-03-29 07:28:03,995 - INFO - 📊 Fetching generations for version: v0.1.0-perf.1+test...
+2026-03-29 07:28:03,996 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-03-29 07:28:05,879 - INFO - 📊 Retrieved 100 traces from page 1, total so far: 100
+2026-03-29 07:28:05,879 - INFO - 🔍 Traces page info: current=1, total_pages=2
+2026-03-29 07:28:05,879 - INFO - 📄 More trace pages available, fetching page 2
+2026-03-29 07:28:05,879 - INFO - 🔄 Fetching traces page 2 with limit 100
+2026-03-29 07:28:06,946 - INFO - 📊 Retrieved 100 traces from page 2, total so far: 200
+2026-03-29 07:28:06,947 - INFO - 🔍 Traces page info: current=2, total_pages=2
+2026-03-29 07:28:06,947 - INFO - 🏁 Reached final traces page 2/2
+2026-03-29 07:28:06,947 - INFO - ✅ Found all 200 generations for app_version v0.1.0-perf.1+test
+2026-03-29 07:28:06,947 - INFO - 🔄 Making initial generations request with limit: 100
+2026-03-29 07:28:07,258 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-03-29 07:28:07,258 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-03-29 07:28:07,259 - INFO - ✅ Found 0 generations
+2026-03-29 07:28:07,259 - INFO - 📋 DataFrame shape: (0, 0)
+2026-03-29 07:28:07,259 - INFO - 💾 Saving raw data...
+2026-03-29 07:28:07,261 - INFO - 📂 Loading and merging all CSV files...
+2026-03-29 07:28:07,262 - ERROR - ❌ No CSV files found to merge
