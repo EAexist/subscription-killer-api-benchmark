@@ -151,12 +151,6 @@ jobs:
           path: data-storage/
           retention-days: 30
 
-      - name: Wait for Langfuse traces to flush
-        run: |
-          echo "⏳ Waiting 5 minutes for Langfuse traces to flush..."
-          sleep 300  # 5 minutes = 300 seconds
-          echo "✅ Wait completed, proceeding with result processing"
-
       - name: Commit and Push Benchmark Results
         working-directory: data-storage
         run: |

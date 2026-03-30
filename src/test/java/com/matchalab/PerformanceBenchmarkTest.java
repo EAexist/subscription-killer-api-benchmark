@@ -337,7 +337,7 @@ public class PerformanceBenchmarkTest {
 
             if (logs != null && !logs.isEmpty()) {
                 // Save raw logs
-                Path logFile = benchmarkDir.resolve("data").resolve(logFileName + ".txt");
+                Path logFile = benchmarkDir.resolve(logFileName + ".txt");
                 Files.createDirectories(logFile.getParent());
                 Files.write(logFile, logs.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
@@ -374,7 +374,7 @@ public class PerformanceBenchmarkTest {
 
         // Use DATA_STORAGE_ROOT like setup_logging does
         String dataStorageRoot = System.getenv().getOrDefault("DATA_STORAGE_ROOT", "data-storage");
-        Path baseDir = java.nio.file.Paths.get(dataStorageRoot, "ai-benchmark", gitTag, timestamp);
+        Path baseDir = java.nio.file.Paths.get(dataStorageRoot, "logs", gitTag, "benchmark", timestamp);
         java.nio.file.Files.createDirectories(baseDir);
 
         // Create logs under same path as setup_logging: {DATA_STORAGE_ROOT}/logs/{app_version}
