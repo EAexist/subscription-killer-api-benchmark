@@ -1,13 +1,13 @@
 # AI Operational Cost Benchmarks
 
-This is AI operational cost benchmark results for each development version of Subsciption Killer API.
+AI operational cost benchmark results for development versions of Subsciption Killer API.
 
 ---
 
 <!-- ## 📊 Executive Summary -->
 
 
-## 📈 Visualized Results
+## Result
 
 ### 1. Amortized Cost
 
@@ -25,7 +25,7 @@ Decomposition of total operational cost into each AI-backed tasks.
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 * `/plots`: Generated `.png` files hosted via GitHub Pages for README embedding.
 * `/data`: Raw CSV/JSON trace logs for audit and reproducibility.
