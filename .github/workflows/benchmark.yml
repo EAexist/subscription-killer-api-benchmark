@@ -11,6 +11,9 @@ on:
         type: string
         default: 'data'
 
+env:
+  DATA_BRANCH: ${{ inputs.data_branch || 'data' }}
+
 jobs:
   run-benchmark:
     runs-on: ubuntu-latest
@@ -31,7 +34,7 @@ jobs:
       - name: Checkout Data Branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.data_branch }}
+          ref: ${{ env.DATA_BRANCH }}
           path: data-storage
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -166,7 +169,7 @@ jobs:
           # Only commit and push if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "benchmark: add results for ${{ env.APP_GIT_TAG }} (run ${{ env.RUN_ID }})"
-            git push origin HEAD:${{ inputs.data_branch }}
+            git push origin HEAD:${{ env.DATA_BRANCH }}
             echo "✅ Benchmark results pushed to data branch"
           else
             echo "⚠️ No benchmark results detected. Skipping push."
@@ -177,6 +180,6 @@ jobs:
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
       app_version: ${{ needs.run-benchmark.outputs.app_git_tag }}
-      data_branch: ${{ inputs.data_branch }}
+      data_branch: ${{ env.DATA_BRANCH }}
       run_id: ${{ needs.run-benchmark.outputs.run_id }}
     secrets: inherit

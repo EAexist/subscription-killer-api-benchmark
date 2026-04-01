@@ -1,177 +1,164 @@
-# Langfuse Post-Processing for Benchmark Results
+# Langfuse Analytics
 
-This directory contains scripts for post-processing benchmark results using the Langfuse Python SDK to generate tables and plots.
+Analytics pipeline for processing Langfuse benchmark data with cost convergence analysis and visualization.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
-1. **Set up Langfuse credentials** as environment variables:
-   ```bash
-   export LANGFUSE_SECRET_KEY="your-secret-key"
-   export LANGFUSE_PUBLIC_KEY="your-public-key"
-   export LANGFUSE_HOST="https://cloud.langfuse.com"  # optional
-   ```
-
-2. **Install Python dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Running the Post-Processor
-
-#### Option 1: Using the convenience scripts (recommended)
-
-**Linux/macOS:**
 ```bash
-# Run with default settings (fetches all generations)
-./scripts/run_langfuse_postprocessor.sh
+# Set Langfuse credentials
+export LANGFUSE_SECRET_KEY="your-secret-key"
+export LANGFUSE_PUBLIC_KEY="your-public-key"
+export LANGFUSE_HOST="https://cloud.langfuse.com"
 
-# Run with specific tag
-./scripts/run_langfuse_postprocessor.sh --run-tag "run-2026-02-21"
-
-# Custom output directory
-./scripts/run_langfuse_postprocessor.sh --output-dir "my-results" --run-tag "run-2026-02-21"
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-**Windows (PowerShell):**
-```powershell
-# Run with default settings
-.\scripts\run_langfuse_postprocessor.ps1
-
-# Run with specific tag
-.\scripts\run_langfuse_postprocessor.ps1 -RunTag "run-2026-02-21"
-
-# Custom output directory
-.\scripts\run_langfuse_postprocessor.ps1 -OutputDir "my-results" -RunTag "run-2026-02-21"
-```
-
-#### Option 2: Direct Python execution
+### Running Analytics
 
 ```bash
-python scripts/langfuse_postprocessor.py --run-tag "run-2026-02-21" --output-dir "results/langfuse"
+# Basic usage
+python main.py --app-version "v1.0.0" --run-id "run-123" --analytics-run-id "analytics-456"
+
+# Using Makefile (recommended)
+make test-analytics MARKER_FILTER="-m integration"
 ```
 
-## 📊 Generated Outputs
+## 📊 Features
 
-The post-processor generates the following files in the output directory:
+### Data Processing
+- **Pagination Handling**: Robust page-based (traces) and cursor-based (generations) pagination
+- **Retry Logic**: Exponential backoff for API delays
+- **CSV Merging**: Combines multiple benchmark runs
+- **Missing Data**: Smart filling of incomplete request indices
 
-### 📄 `langfuse_benchmark_results.md`
-A comprehensive markdown report containing:
-- Summary statistics (total tokens, costs, latency)
-- Detailed results table with formatted data
-- Timestamps and model information
+### Visualizations
+- **Cost Convergence**: Professional integrated legends with convergence status
+- **Marginal Cost**: Per-request cost analysis with variance
+- **Task-Specific**: Separate plots per task type
 
-### 📊 `plots/` directory
-Contains visualizations:
-- `cost_trend.png` - Cost over time
-- `token_usage.png` - Input/output/total token trends
-- `latency_trend.png` - Latency over time
-- `cost_vs_tokens.png` - Scatter plot of cost vs token usage
+### Metrics
+- **Amortized Cost**: Cumulative moving average per thousand requests
+- **Token Usage**: Input/output token analysis
+- **Convergence Status**: CV-based convergence detection
 
-### 📈 `raw_benchmark_data.csv`
-Raw CSV data for further analysis or custom reporting
+## 📁 Directory Structure
+
+```
+scripts/langfuse_analytics/
+├── analytics/                 # Core analytics modules
+│   ├── calculator.py         # Cost and convergence calculations
+│   ├── config.py            # Plot styling configuration
+│   ├── constants.py         # Column definitions
+│   ├── langfuse_client.py   # Langfuse API client with pagination
+│   ├── loader.py            # CSV data loading and merging
+│   └── visualizer.py        # Plot generation with professional styling
+├── tests/                    # Unit and integration tests
+├── main.py                   # Main analytics pipeline
+├── requirements.txt         # Python dependencies
+└── Makefile                 # Build and test commands
+```
 
 ## 🔧 Configuration
 
-### Command Line Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `--run-tag` | Specific run tag to filter results | None (all generations) |
-| `--output-dir` | Output directory for results | `results/langfuse` |
-| `--markdown-file` | Output markdown file name | `langfuse_benchmark_results.md` |
-
 ### Environment Variables
-
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LANGFUSE_SECRET_KEY` | ✅ | Your Langfuse secret key |
-| `LANGFUSE_PUBLIC_KEY` | ✅ | Your Langfuse public key |
-| `LANGFUSE_HOST` | ❌ | Langfuse host (defaults to cloud) |
+| `LANGFUSE_SECRET_KEY` | ✅ | Langfuse secret key |
+| `LANGFUSE_PUBLIC_KEY` | ✅ | Langfuse public key |
+| `LANGFUSE_HOST` | ❌ | Langfuse host URL |
+| `AI_BENCHMARK_K6_ITERATIONS` | ✅ | Expected request count |
 
-## 🔄 Integration with CI/CD
+### Command Line Arguments
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--app-version` | ✅ | App version/tag to fetch |
+| `--run-id` | ✅ | Run identifier |
+| `--analytics-run-id` | ✅ | Analytics run identifier |
 
-The post-processor is automatically integrated into the GitHub Actions workflow (`.github/workflows/benchmark-release.yml`). 
+## 📈 Output
 
-To enable it:
+### Generated Files
+- **Raw Data**: `data-storage/results/raw/benchmark_{app_version}_{timestamp}.csv`
+- **Plots**: `data-storage/results/plots/amortized_ai_cost.png`
+- **Task Plots**: `data-storage/results/plots/amortized_ai_cost_{task_name}.png`
+- **Logs**: `data-storage/logs/{app_version}/analytics_{run_id}_{analytics_run_id}_{timestamp}.log`
 
-1. **Add secrets to your GitHub repository:**
-   - `LANGFUSE_SECRET_KEY`
-   - `LANGFUSE_PUBLIC_KEY`
+### Plot Features
+- **Professional Legends**: `{version} | {status} | ${cost}/1k req`
+- **Convergence Detection**: CV < 0.05 = "Converged", else "Stabilizing"
+- **Smart Ticks**: Automatic axis scaling
+- **Clean Styling**: Professional color palette and fonts
 
-2. **Add repository variables (optional):**
-   - `LANGFUSE_HOST` (if using self-hosted Langfuse)
+## 🧪 Testing
 
-The workflow will:
-- Automatically run after benchmark completion
-- Generate Langfuse analysis for each run tag
-- Include results in GitHub releases
-- Skip gracefully if credentials aren't configured
-
-## 📋 Example Usage Scenarios
-
-### Scenario 1: Analyze Latest Benchmark Run
 ```bash
-# Assuming your latest run used tag "run-2026-02-21"
-./scripts/run_langfuse_postprocessor.sh --run-tag "run-2026-02-21"
+# Run all tests
+make test-analytics
+
+# Run integration tests only
+make test-analytics MARKER_FILTER="-m integration"
+
+# Run unit tests only
+make test-analytics MARKER_FILTER="-m unit"
 ```
 
-### Scenario 2: Compare Multiple Runs
-```bash
-# Run for different tags and compare the generated markdown files
-./scripts/run_langfuse_postprocessor.sh --run-tag "run-2026-02-20" --output-dir "results/run-2026-02-20"
-./scripts/run_langfuse_postprocessor.sh --run-tag "run-2026-02-21" --output-dir "results/run-2026-02-21"
+## 🛠️ Key Components
+
+### LangfuseDataClient
+- Handles Langfuse API pagination (traces: page-based, generations: cursor-based)
+- Implements exponential backoff retry logic
+- Caches model pricing information
+- Transforms API responses to DataFrames
+
+### BenchmarkCalculator
+- Calculates amortized cost convergence metrics
+- Fills missing request indices per app version and task
+- Computes marginal cost with price multipliers
+
+### BenchmarkVisualizer
+- Generates professional plots with integrated legends
+- Handles cost convergence visualization
+- Creates task-specific analysis plots
+
+## 📋 Example Usage
+
+```python
+from analytics.langfuse_client import LangfuseDataClient
+from analytics.calculator import BenchmarkCalculator
+from analytics.visualizer import BenchmarkVisualizer
+
+# Initialize components
+client = LangfuseDataClient()
+calculator = BenchmarkCalculator()
+visualizer = BenchmarkVisualizer()
+
+# Fetch data
+df = client.fetch_benchmark_generations(
+    app_version="v1.0.0",
+    expected_count=200
+)
+
+# Process data
+df_complete = calculator.fill_missing_requests(df, 200)
+df_with_cma = calculator.add_convergence_metrics(df_complete, "cost_total")
+
+# Generate plot
+visualizer.plot_cost_convergence(
+    df_with_cma,
+    "output.png",
+    "Cost Convergence Analysis",
+    "Amortized Cost"
+)
 ```
 
-### Scenario 3: Custom Analysis
-```bash
-# Generate raw data and use it for custom analysis
-python scripts/langfuse_postprocessor.py --output-dir "custom-analysis"
-# Then work with custom-analysis/raw_benchmark_data.csv in your preferred tool
-```
+## 🤝 Architecture
 
-## 🛠️ Troubleshooting
+The analytics pipeline follows a clean separation of concerns:
 
-### Common Issues
+1. **Data Fetching** (`LangfuseDataClient`) → API interaction with retry logic
+2. **Data Processing** (`BenchmarkCalculator`) → Metrics and convergence calculations  
+3. **Visualization** (`BenchmarkVisualizer`) → Professional plot generation
 
-1. **"Missing required environment variables"**
-   - Ensure `LANGFUSE_SECRET_KEY` and `LANGFUSE_PUBLIC_KEY` are set
-   - Check for typos in variable names
-
-2. **"No generations found for tag"**
-   - Verify the run tag exists in Langfuse
-   - Try running without `--run-tag` to see all available generations
-
-3. **"ModuleNotFoundError: No module named 'langfuse'"**
-   - Run `pip install -r requirements.txt`
-   - Ensure you're using the correct Python environment
-
-4. **Permission errors (Windows)**
-   - Run PowerShell as Administrator
-   - Or use: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
-
-### Debug Mode
-
-For debugging, you can run the Python script directly with verbose output:
-```bash
-python -v scripts/langfuse_postprocessor.py --run-tag "your-tag"
-```
-
-## 📚 Dependencies
-
-- **langfuse** >= 2.0.0 - Official Langfuse Python SDK
-- **pandas** >= 1.5.0 - Data manipulation and analysis
-- **matplotlib** >= 3.6.0 - Plotting and visualization
-
-## 🤝 Contributing
-
-To extend the post-processor:
-
-1. **Add new plots**: Modify the `generate_plots()` function in `langfuse_postprocessor.py`
-2. **Add new metrics**: Update the `transform_to_dataframe()` function
-3. **Customize output format**: Modify the `generate_markdown_table()` function
-
-## 📄 License
-
-This script follows the same license as the main project.
+This modular design enables easy extension and testing of individual components.

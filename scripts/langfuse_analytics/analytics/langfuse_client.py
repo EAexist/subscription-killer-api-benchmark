@@ -155,7 +155,7 @@ class LangfuseDataClient:
         return all_items
 
     def _fetch_generations_paginated(self, version: str) -> List[Any]:
-        """Fetch generations using cursor-based pagination.
+        """Fetch generations using cursor-based pagination with retry logic.
         
         Args:
             version: The app version to fetch generations for
@@ -221,43 +221,91 @@ class LangfuseDataClient:
         traces = []
         observations = []
 
+        # First, fetch traces with retry logic
         for attempt in range(max_retries):
             try:
-                # Fetch traces with page-based pagination
                 traces = self._fetch_traces_paginated(version=app_version)
                 count = len(traces)
-
+                
                 # If no expected count specified, return first successful fetch
                 if expected_count is None:
                     logger.info(
-                        f"✅ Found {count} generations for app_version {app_version}"
+                        f"✅ Found {count} traces for app_version {app_version}"
                     )
                     break
-
+                
                 # If we have enough data, return it
                 if count >= expected_count:
                     logger.info(
-                        f"✅ Found all {count} generations for app_version {app_version}"
+                        f"✅ Found all {count} traces for app_version {app_version}"
                     )
                     break
-
+                
                 # Otherwise, wait and retry with exponential backoff
                 if attempt < max_retries - 1:  # Don't wait on the last attempt
                     delay = initial_delay * (2**attempt)  # Exponential backoff
                     logger.warning(
-                        f"⏳ Found {count}/{expected_count} generations. "
+                        f"⏳ Found {count}/{expected_count} traces. "
                         f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
                     )
                     time.sleep(delay)
                 else:
                     logger.warning(
-                        f"⚠️  Max retries reached. Proceeding with partial data ({count} generations)"
+                        f"⚠️  Max retries reached. Proceeding with partial data ({count} traces)"
                     )
                     break
 
             except Exception as e:
                 logger.error(
-                    f"❌ Error fetching from Langfuse (attempt {attempt + 1}): {e}"
+                    f"❌ Error fetching traces from Langfuse (attempt {attempt + 1}): {e}"
+                )
+                if attempt < max_retries - 1:
+                    delay = initial_delay * (2**attempt)
+                    logger.info(
+                        f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error("❌ Max retries reached. Returning empty DataFrame.")
+                    return pd.DataFrame()
+
+        # Second, fetch generations with separate retry logic
+        for attempt in range(max_retries):
+            try:
+                observations = self._fetch_generations_paginated(version=app_version)
+                gen_count = len(observations)
+                
+                # If no expected count specified, return first successful fetch
+                if expected_count is None:
+                    logger.info(
+                        f"✅ Found {gen_count} generations for app_version {app_version}"
+                    )
+                    break
+                
+                # If we have enough data, return it
+                if gen_count >= expected_count:
+                    logger.info(
+                        f"✅ Found all {gen_count} generations for app_version {app_version}"
+                    )
+                    break
+                
+                # Otherwise, wait and retry with exponential backoff
+                if attempt < max_retries - 1:  # Don't wait on the last attempt
+                    delay = initial_delay * (2**attempt)  # Exponential backoff
+                    logger.warning(
+                        f"⏳ Found {gen_count}/{expected_count} generations. "
+                        f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.warning(
+                        f"⚠️  Max retries reached. Proceeding with partial data ({gen_count} generations)"
+                    )
+                    break
+
+            except Exception as e:
+                logger.error(
+                    f"❌ Error fetching generations from Langfuse (attempt {attempt + 1}): {e}"
                 )
                 if attempt < max_retries - 1:
                     delay = initial_delay * (2**attempt)
