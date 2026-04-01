@@ -13,4 +13,6 @@ jobs:
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
       app_version: ${{ inputs.mock_version }}
+      run_id: dev-test
+      data_branch: data-test
     secrets: inherit

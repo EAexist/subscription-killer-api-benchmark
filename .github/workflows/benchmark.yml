@@ -180,6 +180,6 @@ jobs:
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
       app_version: ${{ needs.run-benchmark.outputs.app_git_tag }}
-      data_branch: ${{ env.DATA_BRANCH }}
+      data_branch: ${{ inputs.data_branch || 'data' }}
       run_id: ${{ needs.run-benchmark.outputs.run_id }}
     secrets: inherit
