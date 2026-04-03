@@ -1,0 +1,63 @@
+Log started at 2026-04-03 09:58:22.510891 🚀
+2026-04-03 09:58:22,510 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/v0.1.0-perf.1/analytics__23942292207_20260403_095822.log
+2026-04-03 09:58:22,511 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.1.0-perf.1, run_id: , analytics_run_id: 23942292207
+2026-04-03 09:58:22,591 - INFO - 📊 Fetching data from Langfuse...
+2026-04-03 09:58:22,591 - INFO - 📊 Fetching generations for version: v0.1.0-perf.1...
+2026-04-03 09:58:22,591 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-04-03 09:58:24,210 - INFO - 📊 Retrieved 100 traces from page 1, total so far: 100
+2026-04-03 09:58:24,210 - INFO - 🔍 Traces page info: current=1, total_pages=4
+2026-04-03 09:58:24,211 - INFO - 📄 More trace pages available, fetching page 2
+2026-04-03 09:58:24,211 - INFO - 🔄 Fetching traces page 2 with limit 100
+2026-04-03 09:58:25,470 - INFO - 📊 Retrieved 100 traces from page 2, total so far: 200
+2026-04-03 09:58:25,470 - INFO - 🔍 Traces page info: current=2, total_pages=4
+2026-04-03 09:58:25,470 - INFO - 📄 More trace pages available, fetching page 3
+2026-04-03 09:58:25,470 - INFO - 🔄 Fetching traces page 3 with limit 100
+2026-04-03 09:58:26,651 - INFO - 📊 Retrieved 100 traces from page 3, total so far: 300
+2026-04-03 09:58:26,651 - INFO - 🔍 Traces page info: current=3, total_pages=4
+2026-04-03 09:58:26,651 - INFO - 📄 More trace pages available, fetching page 4
+2026-04-03 09:58:26,651 - INFO - 🔄 Fetching traces page 4 with limit 100
+2026-04-03 09:58:27,856 - INFO - 📊 Retrieved 100 traces from page 4, total so far: 400
+2026-04-03 09:58:27,856 - INFO - 🔍 Traces page info: current=4, total_pages=4
+2026-04-03 09:58:27,856 - INFO - 🏁 Reached final traces page 4/4
+2026-04-03 09:58:27,856 - INFO - ✅ Found all 400 traces for app_version v0.1.0-perf.1
+2026-04-03 09:58:27,857 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-03 09:58:28,203 - INFO - 📊 Retrieved 100 generations, total so far: 100
+2026-04-03 09:58:28,203 - INFO - 📄 Found cursor, fetching next generations page...
+2026-04-03 09:58:28,203 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTA0LTAxVDIxOjIwOjE3LjY0M1oiLCJsYXN0VHJhY2VJZCI6IjFhMWFiMzE4ZTI5YjA3ZTc4NjEwMTZiNjg4ZmUyOWI3IiwibGFzdElkIjoiMDcwZjU3M2FiMTU2MjhlOSJ9
+2026-04-03 09:58:28,589 - INFO - 📊 Retrieved 100 generations, total so far: 200
+2026-04-03 09:58:28,589 - INFO - 📄 Found cursor, fetching next generations page...
+2026-04-03 09:58:28,590 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTA0LTAxVDIxOjIwOjA0Ljg1MFoiLCJsYXN0VHJhY2VJZCI6IjY2NDk1ZDFiMWM5OTcyYzE5MWUxYzYxZjBiM2M1MzMwIiwibGFzdElkIjoiNjNlYmI0OTg4ZDQ0NDQ4YSJ9
+2026-04-03 09:58:28,933 - INFO - 📊 Retrieved 100 generations, total so far: 300
+2026-04-03 09:58:28,933 - INFO - 📄 Found cursor, fetching next generations page...
+2026-04-03 09:58:28,933 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTA0LTAxVDIxOjE5OjUyLjcxN1oiLCJsYXN0VHJhY2VJZCI6ImRmNWRhMzEzNzhhMDhiZDMyNDU5ODFmYmVmZGQyNzdkIiwibGFzdElkIjoiNmZiMGVhNzJlMzA2ZmNjZiJ9
+2026-04-03 09:58:29,244 - INFO - 📊 Retrieved 2 generations, total so far: 302
+2026-04-03 09:58:29,244 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-03 09:58:29,244 - INFO - ✅ Found all 302 generations for app_version v0.1.0-perf.1
+2026-04-03 09:58:29,245 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-03 09:58:29,605 - INFO - 📊 Retrieved 100 generations, total so far: 100
+2026-04-03 09:58:29,605 - INFO - 📄 Found cursor, fetching next generations page...
+2026-04-03 09:58:29,606 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTA0LTAxVDIxOjIwOjE3LjY0M1oiLCJsYXN0VHJhY2VJZCI6IjFhMWFiMzE4ZTI5YjA3ZTc4NjEwMTZiNjg4ZmUyOWI3IiwibGFzdElkIjoiMDcwZjU3M2FiMTU2MjhlOSJ9
+2026-04-03 09:58:30,181 - INFO - 📊 Retrieved 100 generations, total so far: 200
+2026-04-03 09:58:30,181 - INFO - 📄 Found cursor, fetching next generations page...
+2026-04-03 09:58:30,181 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTA0LTAxVDIxOjIwOjA0Ljg1MFoiLCJsYXN0VHJhY2VJZCI6IjY2NDk1ZDFiMWM5OTcyYzE5MWUxYzYxZjBiM2M1MzMwIiwibGFzdElkIjoiNjNlYmI0OTg4ZDQ0NDQ4YSJ9
+2026-04-03 09:58:30,671 - INFO - 📊 Retrieved 100 generations, total so far: 300
+2026-04-03 09:58:30,671 - INFO - 📄 Found cursor, fetching next generations page...
+2026-04-03 09:58:30,671 - INFO - 🔄 Making generations request with cursor: eyJsYXN0U3RhcnRUaW1lVG8iOiIyMDI2LTA0LTAxVDIxOjE5OjUyLjcxN1oiLCJsYXN0VHJhY2VJZCI6ImRmNWRhMzEzNzhhMDhiZDMyNDU5ODFmYmVmZGQyNzdkIiwibGFzdElkIjoiNmZiMGVhNzJlMzA2ZmNjZiJ9
+2026-04-03 09:58:30,985 - INFO - 📊 Retrieved 2 generations, total so far: 302
+2026-04-03 09:58:30,985 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-03 09:58:30,985 - INFO - ✅ Found 302 generations
+2026-04-03 09:58:30,989 - INFO - 📋 DataFrame shape: (302, 13)
+2026-04-03 09:58:30,991 - INFO - 💾 Saving raw data...
+2026-04-03 09:58:30,993 - INFO - 📂 Loading and merging all CSV files...
+2026-04-03 09:58:30,996 - INFO - 📋 Merged DataFrame shape: (302, 13)
+2026-04-03 09:58:30,996 - INFO - 📈 Generating convergence plot...
+2026-04-03 09:58:31,536 - INFO - ✅ Amortized cost plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost.png
+2026-04-03 09:58:32,061 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_categorize_emails.png
+2026-04-03 09:58:32,595 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png
+2026-04-03 09:58:32,595 - INFO - 
+📊 Summary:
+2026-04-03 09:58:32,596 - INFO - - Raw data: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/raw/benchmark_v0.1.0-perf.1_20260403.csv
+2026-04-03 09:58:32,596 - INFO - - Total records: 302
+2026-04-03 09:58:32,596 - INFO - - Task names: ['categorize_emails', 'extract_email_templates']
+2026-04-03 09:58:32,596 - INFO - 
+🎉 Analytics pipeline completed successfully!
