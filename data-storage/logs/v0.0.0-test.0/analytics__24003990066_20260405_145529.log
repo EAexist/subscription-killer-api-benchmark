@@ -1,0 +1,69 @@
+Log started at 2026-04-05 14:55:29.551067 🚀
+2026-04-05 14:55:29,551 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/v0.0.0-test.0/analytics__24003990066_20260405_145529.log
+2026-04-05 14:55:29,551 - INFO - 🚀 Starting Langfuse Analytics Pipeline for app_version: v0.0.0-test.0, run_id: , analytics_run_id: 24003990066
+2026-04-05 14:55:29,631 - INFO - 📊 Fetching data from Langfuse...
+2026-04-05 14:55:29,631 - INFO - 📊 Fetching generations for version: v0.0.0-test.0...
+2026-04-05 14:55:29,631 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-04-05 14:55:31,866 - INFO - 📊 Retrieved 0 traces from page 1, total so far: 0
+2026-04-05 14:55:31,867 - INFO - 🔍 Traces page info: current=1, total_pages=0
+2026-04-05 14:55:31,867 - INFO - 🏁 Reached final traces page 1/0
+2026-04-05 14:55:31,867 - WARNING - ⏳ Found 0/200 traces. Retrying in 60s... (Attempt 1/5)
+2026-04-05 14:56:31,867 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-04-05 14:56:33,407 - INFO - 📊 Retrieved 0 traces from page 1, total so far: 0
+2026-04-05 14:56:33,407 - INFO - 🔍 Traces page info: current=1, total_pages=0
+2026-04-05 14:56:33,407 - INFO - 🏁 Reached final traces page 1/0
+2026-04-05 14:56:33,408 - WARNING - ⏳ Found 0/200 traces. Retrying in 120s... (Attempt 2/5)
+2026-04-05 14:58:33,408 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-04-05 14:58:35,265 - INFO - 📊 Retrieved 0 traces from page 1, total so far: 0
+2026-04-05 14:58:35,265 - INFO - 🔍 Traces page info: current=1, total_pages=0
+2026-04-05 14:58:35,265 - INFO - 🏁 Reached final traces page 1/0
+2026-04-05 14:58:35,265 - WARNING - ⏳ Found 0/200 traces. Retrying in 240s... (Attempt 3/5)
+2026-04-05 15:02:35,265 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-04-05 15:02:37,004 - INFO - 📊 Retrieved 0 traces from page 1, total so far: 0
+2026-04-05 15:02:37,004 - INFO - 🔍 Traces page info: current=1, total_pages=0
+2026-04-05 15:02:37,004 - INFO - 🏁 Reached final traces page 1/0
+2026-04-05 15:02:37,004 - WARNING - ⏳ Found 0/200 traces. Retrying in 480s... (Attempt 4/5)
+2026-04-05 15:10:37,004 - INFO - 🔄 Fetching traces page 1 with limit 100
+2026-04-05 15:10:38,727 - INFO - 📊 Retrieved 0 traces from page 1, total so far: 0
+2026-04-05 15:10:38,727 - INFO - 🔍 Traces page info: current=1, total_pages=0
+2026-04-05 15:10:38,727 - INFO - 🏁 Reached final traces page 1/0
+2026-04-05 15:10:38,727 - WARNING - ⚠️  Max retries reached. Proceeding with partial data (0 traces)
+2026-04-05 15:10:38,727 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-05 15:10:39,091 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-04-05 15:10:39,091 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-05 15:10:39,091 - WARNING - ⏳ Found 0/200 generations. Retrying in 60s... (Attempt 1/5)
+2026-04-05 15:11:39,091 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-05 15:11:39,778 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-04-05 15:11:39,778 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-05 15:11:39,778 - WARNING - ⏳ Found 0/200 generations. Retrying in 120s... (Attempt 2/5)
+2026-04-05 15:13:39,778 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-05 15:13:40,453 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-04-05 15:13:40,453 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-05 15:13:40,453 - WARNING - ⏳ Found 0/200 generations. Retrying in 240s... (Attempt 3/5)
+2026-04-05 15:17:40,453 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-05 15:17:41,086 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-04-05 15:17:41,086 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-05 15:17:41,086 - WARNING - ⏳ Found 0/200 generations. Retrying in 480s... (Attempt 4/5)
+2026-04-05 15:25:41,086 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-05 15:25:41,743 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-04-05 15:25:41,744 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-05 15:25:41,744 - WARNING - ⚠️  Max retries reached. Proceeding with partial data (0 generations)
+2026-04-05 15:25:41,744 - INFO - 🔄 Making initial generations request with limit: 100
+2026-04-05 15:25:42,101 - INFO - 📊 Retrieved 0 generations, total so far: 0
+2026-04-05 15:25:42,101 - INFO - 🏁 No cursor found in generations meta, pagination complete
+2026-04-05 15:25:42,101 - INFO - ✅ Found 0 generations
+2026-04-05 15:25:42,101 - INFO - 📋 DataFrame shape: (0, 0)
+2026-04-05 15:25:42,101 - INFO - 💾 Saving raw data...
+2026-04-05 15:25:42,103 - INFO - 📂 Loading and merging all CSV files...
+2026-04-05 15:25:42,108 - INFO - 📋 Merged DataFrame shape: (552, 13)
+2026-04-05 15:25:42,108 - INFO - 📈 Generating convergence plot...
+2026-04-05 15:25:42,719 - INFO - ✅ Amortized cost plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost.png
+2026-04-05 15:25:43,251 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_categorize_emails.png
+2026-04-05 15:25:43,787 - INFO - ✅ Task-specific plot saved to: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/plots/amortized_ai_cost_extract_email_templates.png
+2026-04-05 15:25:43,787 - INFO - 
+📊 Summary:
+2026-04-05 15:25:43,787 - INFO - - Raw data: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/results/raw/benchmark_v0.0.0-test.0_20260405.csv
+2026-04-05 15:25:43,787 - INFO - - Total records: 552
+2026-04-05 15:25:43,788 - INFO - - Task names: ['categorize_emails', 'extract_email_templates']
+2026-04-05 15:25:43,788 - INFO - 
+🎉 Analytics pipeline completed successfully!
