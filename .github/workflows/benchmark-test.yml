@@ -3,10 +3,18 @@ name: "DEV: Benchmark Test"
 on:
   repository_dispatch:
     types: [new_ai_benchmark_build_test]
+  workflow_dispatch:
+    inputs:
+      skip_benchmark:
+        description: 'Skip benchmark job (useful for debugging)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   test-benchmark:
     uses: ./.github/workflows/benchmark.yml
     with:
       data_branch: data-test
+      skip_benchmark: ${{ inputs.skip_benchmark || false }}
     secrets: inherit

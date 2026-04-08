@@ -10,6 +10,11 @@ on:
         required: false
         type: string
         default: 'data'
+      skip_benchmark:
+        description: 'Skip benchmark job (useful for debugging)'
+        required: false
+        type: boolean
+        default: false
 
 env:
   DATA_BRANCH: ${{ inputs.data_branch || 'data' }}
@@ -124,6 +129,7 @@ jobs:
       # TODO: Update benchmark script to output results directly to data-storage/results/runs/ instead of results/
       # This will eliminate the need for copying and use the data branch approach consistently
       - name: Run Benchmark
+        if: ${{ !inputs.skip_benchmark }}
         env:
           # Only benchmark-specific variables
           APP_GIT_COMMIT: ${{ env.APP_GIT_COMMIT }}
@@ -171,6 +177,7 @@ jobs:
           RUN_ID: ${{ env.RUN_ID }}
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
         run: |
+          cd scripts/langfuse_loader
           python main.py \
             --app-version "$APP_VERSION" \
             --run-id "$RUN_ID"
