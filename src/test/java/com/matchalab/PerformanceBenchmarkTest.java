@@ -59,6 +59,11 @@ public class PerformanceBenchmarkTest {
             .withNetworkAliases("spring-app")
             .withExposedPorts(8080)
             .withEnv(BenchmarkTestUtils.loadSpringEnvVars())
+            // Enable graceful shutdown and shutdown endpoint
+            .withEnv("SERVER_SHUTDOWN", "graceful")
+            .withEnv("SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE", "30s")
+            .withEnv("MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED", "true")
+            .withEnv("MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE", "health,shutdown")
             // .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
             // .withMemory(2 * 1024 * 1024 * 1024L) // 2GB RAM
             // .withCpuCount(4L)
@@ -150,20 +155,11 @@ public class PerformanceBenchmarkTest {
     @Test
     void runBenchmark() {
         assertTrue(springApp.isRunning());
-
         // Configure Gmail API mock server if needed
-        configureGmailMockServer();
+        // configureGmailMockServer();
 
         String finalK6Logs = k6.getLogs();
         assertTrue(finalK6Logs.contains("test finished"));
-
-        try {
-            String flushWaitTime = System.getenv().getOrDefault("LANGFUSE_FLUSH_WAIT_SECONDS", "10");
-            System.out.println("Waiting " + flushWaitTime + "s for observations to flush to Langfuse...");
-            Thread.sleep(Long.parseLong(flushWaitTime) * 1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Create benchmark directory once and reuse
         String appVersion = System.getenv().get("APP_GIT_TAG");
@@ -178,17 +174,6 @@ public class PerformanceBenchmarkTest {
 
         saveSpringBootLogs(runDir);
         saveGmailMockServerLogs(runDir);
-
-        // Shut down containers to save resources before Langfuse export
-        // System.out.println("🔄 Shutting down Spring Boot, Gmail Mock Server, and
-        // PostgreSQL containers...");
-
-        // gmailMockServer.stop();
-        // postgres.stop();
-        // springApp.stop();
-
-        // System.out.println("✅ Spring Boot, Gmail Mock Server, and PostgreSQL
-        // containers stopped.");
 
         // Keep containers running for debugging (if enabled)
         String keepContainers = System.getenv().getOrDefault("AI_BENCHMARK_KEEP_CONTAINERS", "false");
