@@ -24,7 +24,8 @@ def get_raw_data_dir():
 CSV_NAMING_PATTERN = "benchmark_{version}_{date}.csv"
 
 # Processing constants
-DEFAULT_RETRY_COUNT = 5
+INITIAL_DELAY_SECONDS = 10
+DEFAULT_RETRY_COUNT = 8
 
 # API endpoints and secrets (lazy evaluation)
 def get_langfuse_host():

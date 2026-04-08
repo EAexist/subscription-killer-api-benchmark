@@ -14,6 +14,7 @@ from langfuse import Langfuse
 
 from config import (
     DEFAULT_RETRY_COUNT,
+    INITIAL_DELAY_SECONDS,
     get_langfuse_host,
     get_langfuse_public_key,
     get_langfuse_secret_key,
@@ -214,7 +215,6 @@ class LangfuseDataClient:
             max_retries: Maximum number of retry attempts
         """
         logger.info(f"📊 Fetching generations for run_id: {run_id}...")
-        initial_delay = 10
 
         trace = None
         generations = []
@@ -238,7 +238,7 @@ class LangfuseDataClient:
 
                 # Otherwise, wait and retry with exponential backoff
                 if attempt < max_retries - 1:  # Don't wait on the last attempt
-                    delay = 5 * (2**attempt)  # Exponential backoff
+                    delay = INITIAL_DELAY_SECONDS * (2**attempt)  # Exponential backoff
                     logger.warning(
                         f"⏳ No traces found. "
                         f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
@@ -255,7 +255,7 @@ class LangfuseDataClient:
                     f"❌ Error fetching traces from Langfuse (attempt {attempt + 1}): {e}"
                 )
                 if attempt < max_retries - 1:
-                    delay = initial_delay * (2**attempt)
+                    delay = INITIAL_DELAY_SECONDS * (2**attempt)
                     logger.info(
                         f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
                     )
@@ -294,7 +294,6 @@ class LangfuseDataClient:
             max_retries: Maximum number of retry attempts
         """
         logger.info(f"📊 Waiting for {expected_request_count} request observations for trace {trace_id}...")
-        initial_delay = 10
 
         for attempt in range(max_retries):
             try:
@@ -306,7 +305,7 @@ class LangfuseDataClient:
 
                 # Otherwise, wait and retry with exponential backoff
                 if attempt < max_retries - 1:  # Don't wait on the last attempt
-                    delay = 5 * (2**attempt)  # Exponential backoff
+                    delay = INITIAL_DELAY_SECONDS * (2**attempt)  # Exponential backoff
                     logger.warning(
                         f"⏳ No traces found. "
                         f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
@@ -323,7 +322,7 @@ class LangfuseDataClient:
                     f"❌ Error fetching traces from Langfuse (attempt {attempt + 1}): {e}"
                 )
                 if attempt < max_retries - 1:
-                    delay = initial_delay * (2**attempt)
+                    delay = INITIAL_DELAY_SECONDS * (2**attempt)
                     logger.info(
                         f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
                     )
