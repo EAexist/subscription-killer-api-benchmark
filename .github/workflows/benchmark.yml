@@ -161,7 +161,6 @@ jobs:
           retention-days: 30
 
   process-benchmark-data:
-    runs-on: ubuntu-latest
     needs: run-benchmark
     uses: ./.github/workflows/present-benchmark-result.yml
     with:
