@@ -37,12 +37,12 @@ jobs:
           python-version: '3.13'
           cache: 'pip'
           cache-dependency-path: |
-            scripts/langfuse_loader/requirements.txt
-            scripts/analytics/requirements.txt
+            main-repo/scripts/langfuse_loader/requirements.txt
+            main-repo/scripts/analytics/requirements.txt
 
       - name: Install Langfuse Loader Dependencies
         run: |
-          cd scripts/langfuse_loader
+          cd main-repo/scripts/langfuse_loader
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
@@ -58,14 +58,14 @@ jobs:
           RUN_ID: ${{ inputs.run_id }}
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
         run: |
-          cd scripts/langfuse_loader
+          cd main-repo/scripts/langfuse_loader
           python main.py \
             --app-version "$APP_VERSION" \
             --run-id "$RUN_ID"
 
       - name: Install Analytics Dependencies
         run: |
-          cd scripts/analytics
+          cd main-repo/scripts/analytics
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
