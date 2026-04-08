@@ -125,11 +125,11 @@ class LangfuseDataClient:
         
         while True:
             if cursor:
-                logger.info(f"🔄 Making generations request with cursor: {cursor}")
+                logger.info(f"🔄 Fetching next page with cursor: {cursor}")
             else:
-                logger.info(f"🔄 Making initial generations request with limit: {page_size}")
+                logger.info(f"🔄 Fetching first page with limit: {page_size}")
             response = self.client.api.observations_v_2.get_many(
-                limit=page_size, cursor=cursor, type="GENERATION", trace_id=trace_id,)
+                limit=page_size, cursor=cursor, trace_id=trace_id, name="http post /api/benchmark/analyze")
 
             n_items = len(response.data)
             n_requests += n_items
@@ -167,9 +167,9 @@ class LangfuseDataClient:
         
         while True:
             if cursor:
-                logger.info(f"🔄 Making generations request with cursor: {cursor}")
+                logger.info(f"🔄 Fetching next page with cursor: {cursor}")
             else:
-                logger.info(f"🔄 Making initial generations request with limit: {page_size}")
+                logger.info(f"🔄 Fetching first page with limit: {page_size}")
 
             response = self.client.api.observations_v_2.get_many(
                 limit=page_size, cursor=cursor, type="GENERATION", trace_id=trace_id,
