@@ -145,14 +145,6 @@ export function setup() {
 export default function () {
     const currentIteration = __ITER + 1;
     executeRequest('TEST', currentIteration, TEST_ITERATIONS);
-
-    // After last test iteration, wait for Langfuse to flush observations
-    if (currentIteration === TEST_ITERATIONS) {
-        const flushWaitTime = parseInt(__ENV.LANGFUSE_FLUSH_WAIT_SECONDS) || 10;
-        console.log(`Waiting ${flushWaitTime}s for observations to flush to Langfuse...`);
-        sleep(flushWaitTime);
-    }
-
     sleep(0.1);
 }
 
@@ -166,22 +158,6 @@ export function handleSummary(data) {
     console.log(`Successful Requests: ${data.metrics.http_reqs.values.count - data.metrics.http_req_failed.values.count}`);
     console.log(`Failed Requests: ${data.metrics.http_req_failed.values.count}`);
     console.log(`Error Rate: ${(data.metrics.http_req_failed.values.rate * 100).toFixed(2)}%`);
-
-    // Initiate graceful Spring Boot shutdown
-    console.log('🔄 Initiating graceful Spring Boot shutdown...');
-    const shutdownUrl = `${BASE_URL}/actuator/shutdown`;
-    const shutdownResponse = http.post(shutdownUrl, '', {
-        timeout: '10s',
-        headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (shutdownResponse.status === 200) {
-        console.log('✅ Spring Boot shutdown initiated successfully');
-    } else {
-        console.error(`⚠️ Failed to initiate Spring Boot shutdown. Status: ${shutdownResponse.status}`);
-        console.error(`Response: ${shutdownResponse.body}`);
-    }
-
     console.log('test finished');
 
     return {

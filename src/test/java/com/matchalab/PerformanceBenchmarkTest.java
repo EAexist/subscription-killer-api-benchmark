@@ -175,6 +175,9 @@ public class PerformanceBenchmarkTest {
         saveSpringBootLogs(runDir);
         saveGmailMockServerLogs(runDir);
 
+        // Perform graceful Spring Boot shutdown
+        performGracefulShutdown();
+
         // Keep containers running for debugging (if enabled)
         String keepContainers = System.getenv().getOrDefault("AI_BENCHMARK_KEEP_CONTAINERS", "false");
         if ("true".equalsIgnoreCase(keepContainers)) {
@@ -303,6 +306,57 @@ public class PerformanceBenchmarkTest {
 
         } catch (Exception e) {
             System.err.println("Error saving raw Zipkin data: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Performs graceful Spring Boot shutdown using HttpClient and waits for
+     * container to stop.
+     */
+    private void performGracefulShutdown() {
+        try {
+            System.out.println("🔄 Initiating graceful Spring Boot shutdown...");
+
+            String url = "http://" + springApp.getHost() + ":" + springApp.getMappedPort(8080) + "/actuator/shutdown";
+
+            // 1. Trigger shutdown
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                System.out.println("✅ Spring Boot shutdown initiated successfully");
+            } else {
+                System.err.println("⚠️ Failed to initiate Spring Boot shutdown. Status: " + response.statusCode());
+                System.err.println("Response: " + response.body());
+                return;
+            }
+
+            // 2. Wait for container to actually die
+            int maxWaitSeconds = 60;
+            int waitedSeconds = 0;
+
+            while (springApp.isRunning() && waitedSeconds < maxWaitSeconds) {
+                Thread.sleep(1000);
+                waitedSeconds++;
+
+                if (waitedSeconds % 5 == 0) {
+                    System.out.println("⏳ Waiting for Spring Boot to shutdown... (" + waitedSeconds + "s)");
+                }
+            }
+
+            if (!springApp.isRunning()) {
+                System.out.println("✅ Spring Boot shutdown completed gracefully");
+            } else {
+                System.out.println("⚠️ Spring Boot did not shutdown within timeout");
+            }
+
+        } catch (Exception e) {
+            System.err.println("⚠️ Error during graceful Spring Boot shutdown: " + e.getMessage());
         }
     }
 
