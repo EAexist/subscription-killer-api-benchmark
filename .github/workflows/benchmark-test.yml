@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       skip_benchmark:
-        description: 'Skip benchmark job (useful for debugging)'
+        description: 'Skip benchmark job'
         required: false
         type: boolean
         default: false
