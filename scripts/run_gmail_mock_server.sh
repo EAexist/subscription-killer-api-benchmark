@@ -2,13 +2,12 @@
 
 export PYTHONUTF8=1
 
-# --- 1. CONFIGURATION ---
 MOCK_SERVER_DIR="$(pwd)/scripts/gmail_mock_server"
-# Add tests to PYTHONPATH so pytest can resolve siblings
-export PYTHONPATH="$MOCK_SERVER_DIR:$MOCK_SERVER_DIR/dataset/src:$MOCK_SERVER_DIR/dataset/tests"
-export DATASET_PATH="$MOCK_SERVER_DIR/dataset"
 
-# --- 2. SERVER CLEANUP & START ---
+# Change to the mock server directory so Python can find .env file
+cd "$MOCK_SERVER_DIR"
+echo "📁 Changed working directory to: $(pwd)"
+
 cleanup_port() {
     echo "🔍 Checking for processes on port 8081..."
     powershell.exe -Command "Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id \$_ -Force }"
@@ -17,14 +16,11 @@ cleanup_port() {
 
 cleanup_port
 
-VENV_PYTHON="$MOCK_SERVER_DIR/.venv/Scripts/python.exe"
+VENV_PYTHON=".venv/Scripts/python.exe"
 
 echo "🚀 Starting server on 127.0.0.1:8081..."
-"$VENV_PYTHON" -m uvicorn mock_server:app --app-dir "$MOCK_SERVER_DIR" --host 127.0.0.1 --port 8081 &
+"$VENV_PYTHON" -m uvicorn mock_server:app --host 127.0.0.1 --port 8081 &
 SERVER_PID=$!
-
-# Wait for server to be ready
-sleep 3
 
 echo "✅ Gmail mock server is running on http://127.0.0.1:8081"
 echo "📋 Server PID: $SERVER_PID"

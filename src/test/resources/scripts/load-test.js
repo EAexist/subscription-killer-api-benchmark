@@ -4,9 +4,12 @@ import http from 'k6/http';
 // Configuration constants
 const BASE_URL = __ENV.API_BASE_URL || 'http://spring-app:8080';
 const ENDPOINT = __ENV.AI_BENCHMARK_ENDPOINT || 'api/benchmark/analyze';
+const START_ENDPOINT = 'api/benchmark/start';
 const TEST_ITERATIONS = parseInt(__ENV.AI_BENCHMARK_K6_ITERATIONS) || 1;
 const WARMUP_ITERATIONS = parseInt(__ENV.AI_BENCHMARK_K6_WARMUP_ITERATIONS) || 0;
 const REQUEST_TIMEOUT = __ENV.AI_BENCHMARK_REQUEST_TIMEOUT || '20s'
+
+let traceparent = '';
 
 // Convert duration string to milliseconds (e.g., "5m" -> 300000)
 function durationToMs(durationStr) {
@@ -16,13 +19,54 @@ function durationToMs(durationStr) {
     return parseInt(match[1]) * (unitMultipliers[match[2]] || 300000);
 }
 
-// Generate random UUID v4
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
+}
+
+// Initialize benchmark by calling /start endpoint
+function initializeBenchmark() {
+    console.log('Initializing benchmark...');
+
+    const runId = __ENV.RUN_ID;
+    if (!runId) {
+        console.error('RUN_ID environment variable is not set');
+        throw new Error('RUN_ID environment variable is required');
+    }
+    console.log(`Using runId: ${runId}`);
+
+    // Call /start endpoint
+    const startUrl = `${BASE_URL}/${START_ENDPOINT}?runId=${encodeURIComponent(runId)}`;
+    const startResponse = http.post(startUrl, '', { timeout: REQUEST_TIMEOUT });
+
+    console.log(`Start response status: ${startResponse.status}`);
+
+    if (startResponse.status !== 200) {
+        console.error(`Failed to initialize benchmark (HTTP ${startResponse.status})`);
+        console.error(`Response body: ${startResponse.body}`);
+        throw new Error('Benchmark initialization failed');
+    }
+
+    // Extract traceparent from response
+    try {
+        const responseData = JSON.parse(startResponse.body);
+        traceparent = responseData.traceparent;
+
+        if (!traceparent || traceparent === 'null' || traceparent === '') {
+            console.error('Failed to extract traceparent from benchmark start response');
+            console.error(`Response body: ${startResponse.body}`);
+            throw new Error('Traceparent extraction failed');
+        }
+
+        console.log(`Benchmark initialized with runId: ${runId}, traceparent: ${traceparent}`);
+    } catch (e) {
+        console.error('Error parsing start response:', e);
+        console.error(`Response body: ${startResponse.body}`);
+        throw new Error('Failed to parse start response');
+    }
 }
 
 // Create HTTP request parameters with unique user ID and iteration index
@@ -32,7 +76,8 @@ function createRequestParams(iterationNum) {
         headers: {
             'Content-Type': 'application/json',
             'X-Benchmark-User-Id': userId,
-            'X-K6-Index': iterationNum.toString(),
+            'X-Benchmark-Index': iterationNum.toString(),
+            'traceparent': traceparent,
         },
     };
 }
@@ -85,6 +130,9 @@ export let options = {
 // Setup function - runs once before test iterations
 export function setup() {
     logConfiguration();
+
+    // Initialize benchmark by calling /start endpoint
+    initializeBenchmark();
 
     // Execute warmup iterations
     for (let i = 1; i <= WARMUP_ITERATIONS; i++) {

@@ -11,8 +11,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from langfuse import Langfuse
 
-from .config import (
-    DEFAULT_INITIAL_DELAY,
+from config import (
     DEFAULT_RETRY_COUNT,
     get_langfuse_host,
     get_langfuse_public_key,
@@ -107,7 +106,7 @@ class LangfuseDataClient:
             logger.error(f"❌ Error fetching model prices: {e}")
             return self._model_prices_cache  # Return whatever we have in cache
 
-    def _fetch_traces_paginated(self, version: str) -> List[Any]:
+    def _fetch_traces_paginated(self, expected_count: int, version: str) -> List[Any]:
         """Fetch traces using page-based pagination.
         
         Args:
@@ -120,6 +119,8 @@ class LangfuseDataClient:
         page = 1
         all_items = []
         
+        logger.info(f"🔍 Fetching traces with version filter: '{version}'")
+        
         while True:
             logger.info(f"🔄 Fetching traces page {page} with limit {page_size}")
             response = self.client.api.trace.list(limit=page_size, page=page, version=version)
@@ -127,6 +128,10 @@ class LangfuseDataClient:
             page_items = response.data
             all_items.extend(page_items)
             logger.info(f"📊 Retrieved {len(page_items)} traces from page {page}, total so far: {len(all_items)}")
+
+            if len(all_items) >= expected_count:
+                logger.info(f"✅ Reached expected count of {expected_count} traces")
+                break
             
             # Check if there are more pages using page-based pagination
             if hasattr(response, 'meta') and response.meta:
@@ -154,7 +159,7 @@ class LangfuseDataClient:
             
         return all_items
 
-    def _fetch_generations_paginated(self, version: str) -> List[Any]:
+    def _fetch_generations_paginated(self, trace_id: str) -> List[Any]:
         """Fetch generations using cursor-based pagination with retry logic.
         
         Args:
@@ -174,8 +179,8 @@ class LangfuseDataClient:
                 logger.info(f"🔄 Making initial generations request with limit: {page_size}")
 
             response = self.client.api.observations_v_2.get_many(
-                limit=page_size, cursor=cursor, type="GENERATION", 
-                version=version, fields="core,basic,usage,metadata",
+                limit=page_size, cursor=cursor, type="GENERATION", trace_id=trace_id,
+                fields="core,basic,usage,metadata",
                 expand_metadata="attributes"
             )
             
@@ -202,58 +207,56 @@ class LangfuseDataClient:
 
     def fetch_benchmark_generations(
         self,
+        run_id: str,
         app_version: str,
-        expected_count: Optional[int] = None,
+        expected_count: int,
         max_retries: int = DEFAULT_RETRY_COUNT,
-        initial_delay: int = DEFAULT_INITIAL_DELAY,
     ) -> pd.DataFrame:
         """
         Fetch generations with retry logic to handle Langfuse cloud delays.
 
         Args:
+            run_id: The run_id to fetch
             app_version: The app_version/tag to fetch
             expected_count: Expected number of generations (for retry logic)
             max_retries: Maximum number of retry attempts
-            initial_delay: Initial delay in seconds (will increase exponentially)
         """
-        logger.info(f"📊 Fetching generations for version: {app_version}...")
+        logger.info(f"📊 Fetching generations for run_id: {run_id}, app_version: {app_version}...")
+        initial_delay = 10
 
-        traces = []
-        observations = []
+        trace = None
+        generations = []
 
         # First, fetch traces with retry logic
         for attempt in range(max_retries):
             try:
-                traces = self._fetch_traces_paginated(version=app_version)
-                count = len(traces)
-                
-                # If no expected count specified, return first successful fetch
-                if expected_count is None:
-                    logger.info(
-                        f"✅ Found {count} traces for app_version {app_version}"
-                    )
+                limit = 1
+                logger.info(f"🔄 Fetching trace for {run_id}")
+                response = self.client.api.trace.list(limit=limit, tags=run_id)
+                traces = response.data
+
+                if len(traces) > 1:
+                    logger.info(f"⚠️ {len(traces)} different traces found for run_id: {run_id}")
+                    return pd.DataFrame()
+
+                elif len(traces) == 1:
+                    trace = traces[0]
+                    logger.info(f"✅ Found trace {trace.id}")
                     break
-                
-                # If we have enough data, return it
-                if count >= expected_count:
-                    logger.info(
-                        f"✅ Found all {count} traces for app_version {app_version}"
-                    )
-                    break
-                
+
                 # Otherwise, wait and retry with exponential backoff
                 if attempt < max_retries - 1:  # Don't wait on the last attempt
-                    delay = initial_delay * (2**attempt)  # Exponential backoff
+                    delay = 5 * (2**attempt)  # Exponential backoff
                     logger.warning(
-                        f"⏳ Found {count}/{expected_count} traces. "
+                        f"⏳ No traces found. "
                         f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
                     )
                     time.sleep(delay)
                 else:
                     logger.warning(
-                        f"⚠️  Max retries reached. Proceeding with partial data ({count} traces)"
+                        f"⚠️  Max retries reached. No traces found."
                     )
-                    break
+                    return pd.DataFrame()
 
             except Exception as e:
                 logger.error(
@@ -269,73 +272,16 @@ class LangfuseDataClient:
                     logger.error("❌ Max retries reached. Returning empty DataFrame.")
                     return pd.DataFrame()
 
-        # Second, fetch generations with separate retry logic
-        for attempt in range(max_retries):
-            try:
-                observations = self._fetch_generations_paginated(version=app_version)
-                gen_count = len(observations)
-                
-                # If no expected count specified, return first successful fetch
-                if expected_count is None:
-                    logger.info(
-                        f"✅ Found {gen_count} generations for app_version {app_version}"
-                    )
-                    break
-                
-                # If we have enough data, return it
-                if gen_count >= expected_count:
-                    logger.info(
-                        f"✅ Found all {gen_count} generations for app_version {app_version}"
-                    )
-                    break
-                
-                # Otherwise, wait and retry with exponential backoff
-                if attempt < max_retries - 1:  # Don't wait on the last attempt
-                    delay = initial_delay * (2**attempt)  # Exponential backoff
-                    logger.warning(
-                        f"⏳ Found {gen_count}/{expected_count} generations. "
-                        f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
-                    )
-                    time.sleep(delay)
-                else:
-                    logger.warning(
-                        f"⚠️  Max retries reached. Proceeding with partial data ({gen_count} generations)"
-                    )
-                    break
-
-            except Exception as e:
-                logger.error(
-                    f"❌ Error fetching generations from Langfuse (attempt {attempt + 1}): {e}"
-                )
-                if attempt < max_retries - 1:
-                    delay = initial_delay * (2**attempt)
-                    logger.info(
-                        f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
-                    )
-                    time.sleep(delay)
-                else:
-                    logger.error("❌ Max retries reached. Returning empty DataFrame.")
-                    return pd.DataFrame()
-
-        trace_to_index = {
-            t.id: int(next((tag.replace("request_", "") for tag in t.tags if tag.startswith("request_")), None))
-            if next((tag.replace("request_", "") for tag in t.tags if tag.startswith("request_")), None) is not None
-            else None
-            for t in traces
-        }
+        generations = self._fetch_generations_paginated(trace_id = trace.id)
+        logger.info(f"length: {len(generations)}")
                     
-        # Fetch generations with cursor-based pagination
-        generations = self._fetch_generations_paginated(version=app_version)
-
-        logger.info(f"✅ Found {len(generations)} generations")
-
         # Transform to DataFrame
-        df = self.transform_to_dataframe(generations, trace_to_index)
+        df = self.transform_to_dataframe(generations)
         logger.info(f"📋 DataFrame shape: {df.shape}")
 
         return df
 
-    def transform_to_dataframe(self, generations: List[Dict[str, Any]], trace_to_index: Dict[str, Optional[int]]) -> pd.DataFrame:
+    def transform_to_dataframe(self, generations: List[Dict[str, Any]]) -> pd.DataFrame:
         """Transform Langfuse generations (as dicts) to a pandas DataFrame."""
         if not generations:
             return pd.DataFrame()
@@ -346,7 +292,7 @@ class LangfuseDataClient:
 
         for gen in generations:
             try:
-                request_index = trace_to_index.get(gen.get("traceId", ""))
+                request_index = gen.get("metadata", {}).get("attributes", {}).get("benchmark.request.id", -1)
 
                 # Extract usage details
                 usage_details = gen.get("usageDetails", {})

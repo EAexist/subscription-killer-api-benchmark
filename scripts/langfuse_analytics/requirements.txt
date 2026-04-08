@@ -1,5 +1,0 @@
-# Langfuse Analytics Dependencies
-langfuse==3.14.5
-pandas>=1.5.0
-matplotlib>=3.6.0
-pytest-dotenv

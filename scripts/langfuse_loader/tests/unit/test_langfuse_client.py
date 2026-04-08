@@ -3,9 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
-from analytics.langfuse_client import LangfuseDataClient
-from analytics import config
-
+from langfuse_client import LangfuseDataClient
 
 class TestLangfuseDataClient(unittest.TestCase):
     @patch.dict(
@@ -26,7 +24,7 @@ class TestLangfuseDataClient(unittest.TestCase):
             LangfuseDataClient()
         self.assertEqual(cm.exception.code, 1)
 
-    @patch("analytics.langfuse_client.Langfuse")
+    @patch("langfuse_client.Langfuse")
     def test_fetch_benchmark_generations_success(self, mock_langfuse):
         """Test fetching generations with a mock Langfuse client."""
         mock_client = MagicMock()
@@ -70,13 +68,13 @@ class TestLangfuseDataClient(unittest.TestCase):
         client = LangfuseDataClient()
         client.client = mock_client  # Override the client with our mock
 
-        df = client.fetch_benchmark_generations("test-run")
+        df = client.fetch_benchmark_generations("test-run", "test-version", 1)
         self.assertIsInstance(df, pd.DataFrame)
         self.assertEqual(len(df), 1)
         mock_client.api.trace.list.assert_called_once()
         mock_client.api.observations_v_2.get_many.assert_called_once()
 
-    # @patch("analytics.langfuse_client.Langfuse")
+    # @patch("langfuse_client.Langfuse")
     # def test_fetch_benchmark_generations_empty(self, mock_langfuse):
     #     """Test fetching when no generations are found."""
     #     mock_client = MagicMock()
@@ -99,7 +97,7 @@ class TestLangfuseDataClient(unittest.TestCase):
     def test_transform_to_dataframe_empty(self):
         """Test that an empty list of generations results in an empty DataFrame."""
         client = LangfuseDataClient()
-        df = client.transform_to_dataframe([], {})
+        df = client.transform_to_dataframe([])
         self.assertTrue(df.empty)
 
     def test_transform_to_dataframe_with_data(self):
@@ -119,13 +117,13 @@ class TestLangfuseDataClient(unittest.TestCase):
             },
             "costDetails": {"input": 0.0001, "output": 0.00005, "total": 0.00015},
             "version": "test-version",
-            "metadata": {"task_name": "test_task"},
+            "metadata": {"task_name": "test_task", "attributes": {"benchmark.request.id": 1}}
         }
         
         trace_to_index = {"trace-1": 1, "trace-2": None}
 
         client = LangfuseDataClient()
-        df = client.transform_to_dataframe([mock_generation], trace_to_index)
+        df = client.transform_to_dataframe([mock_generation])
 
         self.assertEqual(len(df), 1)
         self.assertEqual(df.iloc[0]["id"], "gen-1")

@@ -46,7 +46,7 @@ make test-analytics MARKER_FILTER="-m integration"
 ## 📁 Directory Structure
 
 ```
-scripts/langfuse_analytics/
+scripts/analytics/
 ├── analytics/                 # Core analytics modules
 │   ├── calculator.py         # Cost and convergence calculations
 │   ├── config.py            # Plot styling configuration

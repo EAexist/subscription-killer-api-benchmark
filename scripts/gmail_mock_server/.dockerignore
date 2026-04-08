@@ -1,22 +1,25 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
 # Environment & Secrets
 .env
 .env*
 !.env.example
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Benchmark Results (ignore contents, keep directories)
-results/ai-benchmark/*
-!results/ai-benchmark/example-tag-v0.0.0-example.1
-
 # Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 *.py[cod]
 *$py.class
 *.so
 .Python
+.venv/
+venv/
+*.venv/
 build/
 develop-eggs/
 dist/
@@ -33,12 +36,43 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-*.venv/
 
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+pytest.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 .codeiumignore
 
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Benchmark Results (ignore contents, keep directories)
+results/ai-benchmark/*
+!results/ai-benchmark/example-tag-v0.0.0-example.1
+
+# Development
+Makefile
 *deprecated*
 
-Makefile
-pytest.ini
-tests/
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

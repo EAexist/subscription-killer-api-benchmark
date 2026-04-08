@@ -19,10 +19,10 @@ clean:
 
 # Langufes Analytics
 setup-analytics:
-	$(MAKE) -C scripts/langfuse_analytics setup
+	$(MAKE) -C scripts/analytics setup
 
 test-analytics:
-	$(MAKE) -C scripts/langfuse_analytics test
+	$(MAKE) -C scripts/analytics test
 
 # Gmail Mock Server
 setup-gmail-mock-server:

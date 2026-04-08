@@ -13,6 +13,7 @@ class GmailMessage(BaseModel):
     senderEmail: str
     subject: str
     snippet: str
+    templateId: Optional[str] = None
 
 
 class BatchGetRequest(BaseModel):
@@ -43,4 +44,4 @@ class HealthResponse(BaseModel):
     """Health check response model."""
 
     status: str
-    total_messages: int
+    messages_per_request: int

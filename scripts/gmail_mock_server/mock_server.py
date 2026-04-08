@@ -4,11 +4,17 @@ from typing import Optional
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+from dotenv import load_dotenv
 
-# Configure logging to show debug messages
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+# Load environment variables from .env file
+load_dotenv()
+
+# Import centralized logging configuration
+from logging_config import setup_logging, get_logger
+
+# Setup logging configuration
+setup_logging()
+logger = get_logger(__name__)
 
 # Import models, services, and configuration
 from config import settings
@@ -55,7 +61,7 @@ app_state.initialize()
 @app.get("/health")
 async def health_check() -> HealthResponse:
     return HealthResponse(
-        status="healthy", total_messages=len(app_state.gmail_messages)
+        status="healthy", messages_per_request=app_state.message_selector.chunk_size
     )
 
 
@@ -91,21 +97,7 @@ async def get_messages(request: BatchGetRequest) -> BatchGetResponse:
     Returns full message details for the provided IDs.
     """
     message_ids = request.message_ids
-
-    messages = []
-    for msg_id in message_ids:
-        if msg_id in app_state.message_map:
-            msg = app_state.message_map[msg_id]
-            messages.append(
-                GmailMessage(
-                    id=msg.id,
-                    internalDate=msg.internalDate,
-                    senderName=msg.senderName,
-                    senderEmail=msg.senderEmail,
-                    subject=msg.subject,
-                    snippet=msg.snippet,
-                )
-            )
+    messages = app_state.message_selector.get_messages(message_ids)
 
     return BatchGetResponse(messages=messages)
 
@@ -116,15 +108,10 @@ async def get_first_message_id(request: FirstMessageIdRequest):
     Gmail API endpoint for getting first message ID by addresses.
     Returns the first message ID found from the given addresses.
     """
-    # Find first message from any of the provided addresses
-    for msg in app_state.gmail_messages:
-        if msg.senderEmail in request.addresses:
-            return msg.id
-
-    return app_state.gmail_messages[0].id
+    return app_state.message_selector.get_first_message_id(request.addresses)
 
 
 if __name__ == "__main__":
-    print("🚀 Starting Gmail API Mock Server")
-    print(f"🌐 Server will run on http://{settings.host}:{settings.port}")
+    logger.info("🚀 Starting Gmail API Mock Server")
+    logger.info(f"🌐 Server will run on http://{settings.host}:{settings.port}")
     uvicorn.run(app, host=settings.host, port=settings.port, ws="none")

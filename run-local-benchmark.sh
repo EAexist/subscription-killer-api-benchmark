@@ -102,6 +102,7 @@ run_benchmark() {
     # Set environment variables for the benchmark script
     export APP_GIT_COMMIT="$EXTRACTED_COMMIT"
     export APP_GIT_TAG="$EXTRACTED_TAG"
+    export RUN_ID="test-run-$(date +%Y%m%d-%H%M%S)"
     export IMAGE_NAME="$IMAGE_NAME"
     
     # Make sure the benchmark script is executable

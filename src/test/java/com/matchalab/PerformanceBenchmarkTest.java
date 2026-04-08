@@ -10,6 +10,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,6 @@ public class PerformanceBenchmarkTest {
             .withEnv("POSTGRES_PASSWORD", BenchmarkTestUtils.getRequiredSpringEnv("SPRING_DATASOURCE_PASSWORD"))
             .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*", 1));
 
-    // 1. Spring Boot App Container
     @Container
     static GenericContainer<?> springApp = new GenericContainer<>(DockerImageName.parse(DOCKER_IMAGE))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
@@ -60,12 +60,11 @@ public class PerformanceBenchmarkTest {
             .withExposedPorts(8080)
             .withEnv(BenchmarkTestUtils.loadSpringEnvVars())
             // .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
-            //     .withMemory(2 * 1024 * 1024 * 1024L) // 2GB RAM
-            //     .withCpuCount(4L)
-            //     .withMemorySwap(-1L))
+            // .withMemory(2 * 1024 * 1024 * 1024L) // 2GB RAM
+            // .withCpuCount(4L)
+            // .withMemorySwap(-1L))
             .waitingFor(Wait.forHttp("/actuator/health").forStatusCode(200))
-            .dependsOn(
-                    postgres);
+            .dependsOn(postgres);
 
     // 3. Gmail API Mock Server Container
     @Container
@@ -90,9 +89,12 @@ public class PerformanceBenchmarkTest {
                     BenchmarkTestUtils.getRequiredEnv("AI_BENCHMARK_K6_WARMUP_ITERATIONS"))
             .withEnv("API_BASE_URL", "http://spring-app:8080")
             .withEnv("AI_BENCHMARK_ENDPOINT", BenchmarkTestUtils.getRequiredEnv("AI_BENCHMARK_ENDPOINT"))
-            .withEnv("AI_BENCHMARK_REQUEST_TIMEOUT", System.getenv().getOrDefault("AI_BENCHMARK_REQUEST_TIMEOUT", "10s"))
+            .withEnv("AI_BENCHMARK_REQUEST_TIMEOUT",
+                    System.getenv().getOrDefault("AI_BENCHMARK_REQUEST_TIMEOUT", "10s"))
             .withEnv("AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS",
                     System.getenv().getOrDefault("AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS", "false"))
+            .withEnv("RUN_ID",
+                    System.getenv("RUN_ID"))
             .withCommand("run", "/scripts/load-test.js")
             .waitingFor(Wait.forLogMessage(".*test finished.*", 1)
                     .withStartupTimeout(BenchmarkTestUtils.getTimeoutDuration()))
@@ -140,7 +142,8 @@ public class PerformanceBenchmarkTest {
         logThread.setDaemon(true); // Don't prevent JVM shutdown
         logThread.start();
 
-        // Register shutdown hook for container cleanup on Ctrl+C (after all containers are defined)
+        // Register shutdown hook for container cleanup on Ctrl+C (after all containers
+        // are defined)
         ContainerCleanupManager.registerShutdownHook(postgres, springApp, gmailMockServer, k6);
     }
 
@@ -163,21 +166,31 @@ public class PerformanceBenchmarkTest {
         }
 
         // Create benchmark directory once and reuse
-        Path benchmarkDir;
+        String appVersion = System.getenv().get("APP_GIT_TAG");
+        String runId = System.getenv().get("RUN_ID");
+        Path baseDir = Paths.get(System.getenv().getOrDefault("DATA_STORAGE_ROOT", "data-storage"));
+        Path runDir;
         try {
-            benchmarkDir = createBenchmarkDirectory();
+            runDir = createBenchmarkDirectory(baseDir, appVersion, runId);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create benchmark directory", e);
         }
 
-        saveSpringBootLogs(benchmarkDir);
-        saveGmailMockServerLogs(benchmarkDir);
-        // generateBenchmarkMetadata(benchmarkDir);
-        // generateBenchmarkComparison();
-        // saveRawPrometheusMetrics(benchmarkDir);
-        // saveRawZipkinData(benchmarkDir);
+        saveSpringBootLogs(runDir);
+        saveGmailMockServerLogs(runDir);
 
-        // Keep containers running for log inspection (if enabled)
+        // Shut down containers to save resources before Langfuse export
+        // System.out.println("🔄 Shutting down Spring Boot, Gmail Mock Server, and
+        // PostgreSQL containers...");
+
+        // gmailMockServer.stop();
+        // postgres.stop();
+        // springApp.stop();
+
+        // System.out.println("✅ Spring Boot, Gmail Mock Server, and PostgreSQL
+        // containers stopped.");
+
+        // Keep containers running for debugging (if enabled)
         String keepContainers = System.getenv().getOrDefault("AI_BENCHMARK_KEEP_CONTAINERS", "false");
         if ("true".equalsIgnoreCase(keepContainers)) {
             System.out.println("=== Benchmark Completed ===");
@@ -198,7 +211,7 @@ public class PerformanceBenchmarkTest {
      * Saves the raw Prometheus metrics response without parsing.
      * Creates both the raw text file and a simple JSON wrapper for easy access.
      */
-    private void saveRawPrometheusMetrics(Path benchmarkDir) {
+    private void saveRawPrometheusMetrics(Path runDir) {
         try {
             Integer port = springApp.getMappedPort(8080);
             String prometheusUrl = String.format("http://localhost:%d/actuator/prometheus", port);
@@ -215,7 +228,7 @@ public class PerformanceBenchmarkTest {
                 String rawMetricsData = response.body();
 
                 // Save as JSON wrapper for Python script consumption
-                Path jsonFile = benchmarkDir.resolve("data").resolve("raw-prometheus-metrics.json");
+                Path jsonFile = runDir.resolve("data").resolve("raw-prometheus-metrics.json");
                 try (FileWriter writer = new FileWriter(jsonFile.toFile())) {
                     ObjectMapper mapper = new ObjectMapper();
                     ObjectNode wrapper = mapper.createObjectNode();
@@ -267,7 +280,7 @@ public class PerformanceBenchmarkTest {
     /**
      * Saves raw Zipkin tracing data.
      */
-    private void saveRawZipkinData(Path benchmarkDir) {
+    private void saveRawZipkinData(Path runDir) {
         try {
             // Wait for Spans to be reported and indexed
             Thread.sleep(5000);
@@ -288,7 +301,7 @@ public class PerformanceBenchmarkTest {
                 String rawZipkinData = response.body();
 
                 // Save as JSON wrapper
-                Path jsonFile = benchmarkDir.resolve("data").resolve("raw-zipkin-traces.json");
+                Path jsonFile = runDir.resolve("data").resolve("raw-zipkin-traces.json");
                 try (FileWriter writer = new FileWriter(jsonFile.toFile())) {
                     ObjectMapper mapper = new ObjectMapper();
                     ObjectNode wrapper = mapper.createObjectNode();
@@ -311,33 +324,33 @@ public class PerformanceBenchmarkTest {
     /**
      * Saves Gmail Mock Server container logs to benchmark directory.
      */
-    private void saveGmailMockServerLogs(Path benchmarkDir) {
-        saveContainerLogs(benchmarkDir, gmailMockServer, "gmail-mock-server", "gmail-mock-server-logs");
+    private void saveGmailMockServerLogs(Path runDir) {
+        saveContainerLogs(runDir, gmailMockServer, "gmail-mock-server", "gmail-mock-server-logs");
     }
 
     /**
      * Saves Spring Boot application logs from the container.
      */
-    private void saveSpringBootLogs(Path benchmarkDir) {
-        saveContainerLogs(benchmarkDir, springApp, "spring-boot-container", "spring-boot-logs");
+    private void saveSpringBootLogs(Path runDir) {
+        saveContainerLogs(runDir, springApp, "spring-boot-container", "spring-boot-logs");
     }
 
     /**
      * Utility method to save container logs in both text and JSON formats.
      * 
-     * @param benchmarkDir The benchmark directory to save logs to
-     * @param container The container to get logs from
-     * @param sourceName The source name for JSON metadata
+     * @param runDir      The benchmark directory to save logs to
+     * @param container   The container to get logs from
+     * @param sourceName  The source name for JSON metadata
      * @param logFileName The base filename for log files (without extension)
      */
-    private void saveContainerLogs(Path benchmarkDir, GenericContainer<?> container, String sourceName, String logFileName) {
+    private void saveContainerLogs(Path runDir, GenericContainer<?> container, String sourceName, String logFileName) {
         try {
             // Get logs from the container
             String logs = container.getLogs();
 
             if (logs != null && !logs.isEmpty()) {
                 // Save raw logs
-                Path logFile = benchmarkDir.resolve(logFileName + ".txt");
+                Path logFile = runDir.resolve(logFileName + ".txt");
                 Files.createDirectories(logFile.getParent());
                 Files.write(logFile, logs.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
@@ -349,7 +362,7 @@ public class PerformanceBenchmarkTest {
                 wrapper.put("contentType", "text/plain");
                 wrapper.put("rawData", logs);
 
-                Path jsonFile = benchmarkDir.resolve("data").resolve(logFileName + ".json");
+                Path jsonFile = runDir.resolve(logFileName + ".json");
                 try (FileWriter writer = new FileWriter(jsonFile.toFile())) {
                     writer.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(wrapper));
                 }
@@ -367,29 +380,22 @@ public class PerformanceBenchmarkTest {
     /**
      * Creates benchmark directory structure.
      */
-    private Path createBenchmarkDirectory() throws java.io.IOException {
-        String gitTag = System.getenv().getOrDefault("APP_GIT_TAG", "unknown");
-        String timestamp = java.time.LocalDateTime.now()
-                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    private Path createBenchmarkDirectory(Path baseDir, String appVersion, String runId) throws java.io.IOException {
 
-        // Use DATA_STORAGE_ROOT like setup_logging does
-        String dataStorageRoot = System.getenv().getOrDefault("DATA_STORAGE_ROOT", "data-storage");
-        Path baseDir = java.nio.file.Paths.get(dataStorageRoot, "logs", gitTag, "benchmark", timestamp);
-        java.nio.file.Files.createDirectories(baseDir);
-
-        // Create logs under same path as setup_logging: {DATA_STORAGE_ROOT}/logs/{app_version}
-        Path logsDir = java.nio.file.Paths.get(dataStorageRoot, "logs", gitTag);
+        // Create logs under same path as setup_logging:
+        // {DATA_STORAGE_ROOT}/logs/{app_version}/{run_id}
+        Path logsDir = baseDir.resolve("logs").resolve(appVersion).resolve(runId);
         java.nio.file.Files.createDirectories(logsDir);
 
-        return baseDir;
+        return logsDir;
     }
 
     /**
      * Generates benchmark metadata files.
      */
-    private void generateBenchmarkMetadata(Path benchmarkDir) {
+    private void generateBenchmarkMetadata(Path runDir) {
         try {
-            BenchmarkMetadataUtils.generateMetadataFiles(benchmarkDir, System.getenv());
+            BenchmarkMetadataUtils.generateMetadataFiles(runDir, System.getenv());
         } catch (Exception e) {
             System.err.println("Failed to generate benchmark metadata: " + e.getMessage());
         }

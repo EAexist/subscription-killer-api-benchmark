@@ -28,25 +28,6 @@ def get_plots_dir():
 CSV_NAMING_PATTERN = "benchmark_{version}_{date}.csv"
 PLOT_NAMING_PATTERN = "{metric}_results.png"
 
-# Processing constants
-DEFAULT_RETRY_COUNT = 5
-DEFAULT_INITIAL_DELAY = 60
-MAX_REQUEST_INDEX_TICKS = 5
-
-# API endpoints and secrets (lazy evaluation)
-def get_langfuse_host():
-    """Get Langfuse host lazily."""
-    return os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
-
-def get_langfuse_secret_key():
-    """Get Langfuse secret key lazily."""
-    return os.getenv("LANGFUSE_SECRET_KEY")
-
-def get_langfuse_public_key():
-    """Get Langfuse public key lazily."""
-    return os.getenv("LANGFUSE_PUBLIC_KEY")
-
-
 # Ensure directories exist when imported
 def ensure_directories():
     """Create data directories if they don't exist."""

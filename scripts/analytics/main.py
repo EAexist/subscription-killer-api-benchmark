@@ -12,12 +12,10 @@ import sys
 from datetime import datetime
 
 from analytics.calculator import BenchmarkCalculator
-from analytics.langfuse_client import LangfuseDataClient
 from analytics.config import (
-    CSV_NAMING_PATTERN,
     get_data_storage_root,
 )
-from analytics.loader import load_and_merge_csv_files, save_raw_data
+from analytics.loader import load_and_merge_csv_files
 from analytics.visualizer import BenchmarkVisualizer
 
 
@@ -78,32 +76,18 @@ def main():
     analytics_run_id = args.analytics_run_id  
     logger = setup_logging(app_version, run_id, analytics_run_id)
     logger.info(
-        f"🚀 Starting Langfuse Analytics Pipeline for app_version: {app_version}, run_id: {run_id}, analytics_run_id: {analytics_run_id}"
+        f"🚀 Starting Analytics Pipeline for app_version: {app_version}, run_id: {run_id}, analytics_run_id: {analytics_run_id}"
     )
 
-    # Initialize components
-    client = LangfuseDataClient()
     visualizer = BenchmarkVisualizer()
 
     try:
-        # 1. Fetch data from Langfuse
-        logger.info("📊 Fetching data from Langfuse...")
-        
         # Fetch with expected count - AI_BENCHMARK_K6_ITERATIONS is required
         expected_count = os.getenv("AI_BENCHMARK_K6_ITERATIONS")
         if not expected_count:
             logger.error("❌ AI_BENCHMARK_K6_ITERATIONS environment variable is required")
             logger.error("Please set AI_BENCHMARK_K6_ITERATIONS in your .env.test file")
             return
-        
-        df = client.fetch_benchmark_generations(
-            app_version=app_version,
-            expected_count=int(expected_count),
-        )
-
-        # 2. Save raw data as CSV
-        logger.info("💾 Saving raw data...")
-        csv_path = save_raw_data(df, app_version)
 
         # 3. Load and merge all CSV files from data directory
         logger.info("📂 Loading and merging all CSV files...")
@@ -157,14 +141,6 @@ def main():
                         "Amortized Cost",
                     )
                     logger.info(f"✅ Task-specific plot saved to: {task_plot_path}")
-
-        # Generate summary
-        logger.info("\n📊 Summary:")
-        logger.info(f"- Raw data: {csv_path}")
-        logger.info(f"- Total records: {len(merged_df)}")
-
-        if "task_name" in merged_df.columns:
-            logger.info(f"- Task names: {merged_df['task_name'].unique().tolist()}")
 
         logger.info("\n🎉 Analytics pipeline completed successfully!")
 
