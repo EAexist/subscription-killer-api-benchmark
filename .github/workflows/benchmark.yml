@@ -157,8 +157,13 @@ jobs:
         if: always()
         with:
           name: benchmark-run-${{ env.RUN_ID }}
-          path: data-storage/
-          retention-days: 30
+          path: data-storage/logs/
+          retention-days: 7
+
+      - name: Wait for Langfuse Data Sync
+        run: |
+          echo "Waiting 60 seconds for Langfuse data to sync..."
+          sleep 60
 
   process-benchmark-data:
     needs: run-benchmark

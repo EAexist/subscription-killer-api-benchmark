@@ -48,11 +48,11 @@ test-run: $(SENTINEL)
 
 test-run-real-tracing: $(SENTINEL)
 	@echo "🚀 Running Langfuse exporter with real tracing..."
-	@echo "📋 Using provided arguments: run-id=$(run-id), app-version=$(app-version)"
+	@echo "📋 Using provided arguments: app-version=$(app-version), run-id=$(run-id), expected-request-count=$(expected-request-count)"
 	@bash -c 'export DATA_STORAGE_ROOT=../../data-storage \
 		PYTHONIOENCODING=utf-8 \
 		LOG_LEVEL=DEBUG; \
-		$(PYTHON) -m main --app-version "$(app-version)" --run-id "$(run-id)"'
+		$(PYTHON) -m main --app-version "$(app-version)" --run-id "$(run-id)" --expected-request-count "$(expected-request-count)"'
 
 clean:
 	@echo "Cleaning environment..."

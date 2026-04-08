@@ -68,10 +68,14 @@ def main():
     parser.add_argument(
         "--run-id", required=True, help="Run ID to save logs"
     )
+    parser.add_argument(
+        "--expected-request-count", required=True, help="Expected request count"
+    )
     args = parser.parse_args()
 
     app_version = args.app_version
     run_id = args.run_id    
+    expected_request_count = int(args.expected_request_count)
     logger = setup_logging(app_version, run_id)
     logger.info(
         f"🚀 Starting Langfuse Analytics Pipeline for app_version: {app_version}, run_id: {run_id}"
@@ -86,14 +90,13 @@ def main():
         
         df = client.fetch_benchmark_generations(
             run_id=run_id,
-            app_version=app_version,
-            expected_count=1,
+            expected_request_count=expected_request_count,
         )
 
         logger.info("💾 Saving raw data...")
         save_raw_data(df, app_version)
 
-        logger.info("\n🎉 Langfuse data exported successfully!")
+        logger.info("\n🎉 Langfuse data loaded successfully!")
 
         # Flush all logging handlers to ensure logs are written
         for handler in logging.getLogger().handlers:

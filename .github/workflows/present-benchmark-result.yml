@@ -61,7 +61,8 @@ jobs:
           cd main-repo/scripts/langfuse_loader
           python main.py \
             --app-version "$APP_VERSION" \
-            --run-id "$RUN_ID"
+            --run-id "$RUN_ID" \
+            --expected-request-count "$AI_BENCHMARK_K6_ITERATIONS"
 
       - name: Install Analytics Dependencies
         run: |
@@ -78,21 +79,35 @@ jobs:
           cd main-repo/scripts/analytics
           python main.py --app-version "${{ inputs.app_version }}" --run-id "${{ inputs.run_id }}" --analytics-run-id "${{ github.run_id }}"
 
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-presentation-${{ inputs.run_id }}
+          path: data-storage/logs/
+          retention-days: 7
+
       - name: Commit and Push
         working-directory: data-repo
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Debug: See if any files were actually created/modified
-          ls -R 
+          # Debug: See what files exist in results directory
+          echo "=== Checking data-storage/results/ directory ==="
+          ls -R data-storage/results/ || echo "No results directory found"
           
-          git add .
+          # Only add files in data-storage/results/ path
+          git add data-storage/results/
+          
+          # Show what will be committed
+          echo "=== Files to be committed ==="
+          git diff --cached --name-only
           
           # Only commit and push if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "data: update results for ${{ inputs.app_version }}"
             git push origin HEAD:${{ inputs.data_branch }}
           else
-            echo "No changes detected in data-storage. Skipping push."
+            echo "No changes detected in data-storage/results/. Skipping push."
           fi

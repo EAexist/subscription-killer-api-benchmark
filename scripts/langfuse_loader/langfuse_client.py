@@ -8,6 +8,7 @@ import sys
 import time
 from typing import Any, Dict, List, Optional
 
+from numpy._core.numerictypes import bool_
 import pandas as pd
 from langfuse import Langfuse
 
@@ -106,58 +107,49 @@ class LangfuseDataClient:
             logger.error(f"❌ Error fetching model prices: {e}")
             return self._model_prices_cache  # Return whatever we have in cache
 
-    def _fetch_traces_paginated(self, expected_count: int, version: str) -> List[Any]:
+    def _fetch_request_observations_paginated(self, trace_id: str) -> int:
         """Fetch traces using page-based pagination.
         
         Args:
-            version: The app version to fetch traces for
+            trace_id: The id to fetch traces for
             
         Returns:
             List of all traces across all pages
         """
         page_size = 100
-        page = 1
-        all_items = []
-        
-        logger.info(f"🔍 Fetching traces with version filter: '{version}'")
+        cursor = None
+        n_requests = 0
+
+        logger.info(f"🔍 Fetching request traces of trace {trace_id}")
         
         while True:
-            logger.info(f"🔄 Fetching traces page {page} with limit {page_size}")
-            response = self.client.api.trace.list(limit=page_size, page=page, version=version)
-            
-            page_items = response.data
-            all_items.extend(page_items)
-            logger.info(f"📊 Retrieved {len(page_items)} traces from page {page}, total so far: {len(all_items)}")
+            if cursor:
+                logger.info(f"🔄 Making generations request with cursor: {cursor}")
+            else:
+                logger.info(f"🔄 Making initial generations request with limit: {page_size}")
+            response = self.client.api.observations_v_2.get_many(
+                limit=page_size, cursor=cursor, type="GENERATION", trace_id=trace_id,)
 
-            if len(all_items) >= expected_count:
-                logger.info(f"✅ Reached expected count of {expected_count} traces")
-                break
+            n_items = len(response.data)
+            n_requests += n_items
+            logger.info(f"📊 Retrieved {n_items} generations, total so far: {n_requests}")
             
-            # Check if there are more pages using page-based pagination
+            # Check if there are more pages using cursor-based pagination
             if hasattr(response, 'meta') and response.meta:
-                # Check for total_pages and current page
-                if hasattr(response.meta, 'total_pages') and hasattr(response.meta, 'page'):
-                    total_pages = response.meta.total_pages
-                    current_page = response.meta.page
-                    logger.info(f"🔍 Traces page info: current={current_page}, total_pages={total_pages}")
-                    
-                    if current_page < total_pages:
-                        page += 1
-                        logger.info(f"📄 More trace pages available, fetching page {page}")
-                        continue
-                    else:
-                        logger.info(f"🏁 Reached final traces page {current_page}/{total_pages}")
-                        break
+                # Check for cursor in meta (v2 API format)
+                if hasattr(response.meta, 'cursor') and response.meta.cursor:
+                    cursor = response.meta.cursor
+                    logger.info(f"📄 Found cursor, fetching next generations page...")
                 else:
-                    # Fallback: if no page info, assume this is the last page
-                    logger.info(f"⚠️  No page info in traces meta, assuming single page")
+                    # No cursor available, assume no more pages
+                    logger.info(f"🏁 No cursor found in generations meta, pagination complete")
                     break
             else:
                 # Fallback: if no meta info, assume this is the last page
-                logger.info(f"⚠️  No meta object in traces response, assuming single page")
+                logger.info(f"⚠️  No meta object in generations response, assuming single page")
                 break
             
-        return all_items
+        return n_requests
 
     def _fetch_generations_paginated(self, trace_id: str) -> List[Any]:
         """Fetch generations using cursor-based pagination with retry logic.
@@ -208,8 +200,8 @@ class LangfuseDataClient:
     def fetch_benchmark_generations(
         self,
         run_id: str,
-        app_version: str,
-        expected_count: int,
+        # app_version: str,
+        expected_request_count: int,
         max_retries: int = DEFAULT_RETRY_COUNT,
     ) -> pd.DataFrame:
         """
@@ -217,11 +209,11 @@ class LangfuseDataClient:
 
         Args:
             run_id: The run_id to fetch
-            app_version: The app_version/tag to fetch
-            expected_count: Expected number of generations (for retry logic)
+            # app_version: The app_version/tag to fetch
+            expected_request_count: Expected number of generations (for retry logic)
             max_retries: Maximum number of retry attempts
         """
-        logger.info(f"📊 Fetching generations for run_id: {run_id}, app_version: {app_version}...")
+        logger.info(f"📊 Fetching generations for run_id: {run_id}...")
         initial_delay = 10
 
         trace = None
@@ -272,14 +264,75 @@ class LangfuseDataClient:
                     logger.error("❌ Max retries reached. Returning empty DataFrame.")
                     return pd.DataFrame()
 
+        if( trace == None) :
+            logger.error("❌ Trace not found.")
+            return pd.DataFrame()
+        
+        if not self._wait_langfuse_trace_sync(trace_id = trace.id, expected_request_count = expected_request_count, max_retries = max_retries):
+            logger.error("❌ Trace sync failed.")
+            return pd.DataFrame()
+        
         generations = self._fetch_generations_paginated(trace_id = trace.id)
-        logger.info(f"length: {len(generations)}")
-                    
-        # Transform to DataFrame
         df = self.transform_to_dataframe(generations)
         logger.info(f"📋 DataFrame shape: {df.shape}")
 
         return df
+
+    def _wait_langfuse_trace_sync(
+        self,
+        trace_id: str,
+        expected_request_count: int,
+        max_retries: int = DEFAULT_RETRY_COUNT,
+    ) -> bool :
+        """
+        Fetch generations with retry logic to handle Langfuse cloud delays.
+
+        Args:
+            run_id: The run_id to fetch
+            app_version: The app_version/tag to fetch
+            expected_request_count: Expected number of generations (for retry logic)
+            max_retries: Maximum number of retry attempts
+        """
+        logger.info(f"📊 Waiting for {expected_request_count} request observations for trace {trace_id}...")
+        initial_delay = 10
+
+        for attempt in range(max_retries):
+            try:
+                n_requests = self._fetch_request_observations_paginated(trace_id=trace_id)
+
+                if n_requests >= expected_request_count:
+                    logger.info(f"✅ Found {n_requests} requests for trace {trace_id}")
+                    return True
+
+                # Otherwise, wait and retry with exponential backoff
+                if attempt < max_retries - 1:  # Don't wait on the last attempt
+                    delay = 5 * (2**attempt)  # Exponential backoff
+                    logger.warning(
+                        f"⏳ No traces found. "
+                        f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.warning(
+                        f"⚠️  Max retries reached. No traces found."
+                    )
+                    return False
+
+            except Exception as e:
+                logger.error(
+                    f"❌ Error fetching traces from Langfuse (attempt {attempt + 1}): {e}"
+                )
+                if attempt < max_retries - 1:
+                    delay = initial_delay * (2**attempt)
+                    logger.info(
+                        f"Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error("❌ Max retries reached. Returning empty DataFrame.")
+                    return False
+
+        return False
 
     def transform_to_dataframe(self, generations: List[Dict[str, Any]]) -> pd.DataFrame:
         """Transform Langfuse generations (as dicts) to a pandas DataFrame."""
