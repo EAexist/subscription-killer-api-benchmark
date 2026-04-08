@@ -1,0 +1,5 @@
+id,request_index,task_name,input_tokens,instruction_tokens,output_tokens,input_tokens_per_item,output_tokens_per_item,total_tokens,cost_input,cost_output,cost_total,app_version
+ea814f08b466fdab,1,extract_email_templates,1559,231,1084,0,0,2643,0.0007795,0.003252,0.0040315,v0.1.0-perf.1+test
+505c17aa44d0c83d,1,categorize_emails,1720,242,848,0,0,2568,0.00086,0.002544,0.003404,v0.1.0-perf.1+test
+dca4112cd513196a,2,extract_email_templates,1094,231,751,0,0,1845,0.000547,0.002253,0.002799999999,v0.1.0-perf.1+test
+03a9d2f033f04519,2,categorize_emails,1313,242,601,0,0,1914,0.0006565,0.001803,0.0024595,v0.1.0-perf.1+test
