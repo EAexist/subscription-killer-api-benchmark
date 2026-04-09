@@ -1,5 +1,0 @@
-Log started at 2026-04-08 15:34:49.120927 🚀
-2026-04-08 15:34:49,120 - INFO - Logging to file: /home/runner/work/subscription-killer-api-benchmark/subscription-killer-api-benchmark/data-repo/data-storage/logs/v0.1.0-perf.1+test/analytics_24143825893_24143825893_20260408_153449.log
-2026-04-08 15:34:49,121 - INFO - 🚀 Starting Analytics Pipeline for app_version: v0.1.0-perf.1+test, run_id: 24143825893, analytics_run_id: 24143825893
-2026-04-08 15:34:49,121 - INFO - 📂 Loading and merging all CSV files...
-2026-04-08 15:34:49,121 - ERROR - ❌ No CSV files found to merge
