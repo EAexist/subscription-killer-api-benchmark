@@ -19,17 +19,17 @@ jobs:
   process-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source (Main)
-        uses: actions/checkout@v4
-        with:
-          path: main-repo
-
-      - name: Checkout Data Branch
+      - name: Checkout Data Branch (Primary)
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.data_branch }}
-          path: data-repo
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout Source Code (Main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-repo
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -51,7 +51,7 @@ jobs:
           LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
-          DATA_STORAGE_ROOT: ${{ github.workspace }}/data-storage
+          DATA_STORAGE_ROOT: ${{ github.workspace }}
           PYTHONIOENCODING: utf-8          
           # Benchmark context variables
           APP_VERSION: ${{ inputs.app_version }}
@@ -72,7 +72,7 @@ jobs:
 
       - name: Run Analytics
         env:
-          DATA_STORAGE_ROOT: ${{ github.workspace }}/data-storage
+          DATA_STORAGE_ROOT: ${{ github.workspace }}
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
         run: |
           cd main-repo/scripts/analytics
@@ -83,22 +83,10 @@ jobs:
         if: always()
         with:
           name: benchmark-presentation-${{ inputs.run_id }}
-          path: data-storage/logs/
+          path: logs/
           retention-days: 7
 
-      - name: Copy All Results to Data Branch
-        run: |
-          mkdir -p data-repo/data-storage/results
-          
-          if [ -d "data-storage/results" ]; then
-            cp -r data-storage/results/* data-repo/data-storage/results/
-            ls -la data-repo/data-storage/results/
-          else
-            echo "No results directory found to copy"
-          fi
-
-      - name: Commit and Push
-        working-directory: data-repo
+      - name: Commit and Push Results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
