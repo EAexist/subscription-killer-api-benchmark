@@ -4,7 +4,7 @@
 
 ### 1. Total Amortized Cost
 
-Total Amortized cost of AI operations. Cost decreasing by number of requests implies effect of cache hits.
+Total amortized cost of AI operations. Cost decreasing by number of requests implies effect of email template cache hits.
 
 ![Total Amortized Cost](https://EAexist.github.io/subscription-killer-api-benchmark/data-storage/results/plots/amortized_ai_cost.png)
 
