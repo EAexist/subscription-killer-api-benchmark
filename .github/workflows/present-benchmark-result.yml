@@ -84,7 +84,7 @@ jobs:
         if: always()
         with:
           name: benchmark-presentation-${{ inputs.run_id }}
-          path: logs/
+          path: main-repo/logs/
           retention-days: 7
 
       - name: Commit and Push Results
