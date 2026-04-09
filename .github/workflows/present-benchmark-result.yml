@@ -52,7 +52,7 @@ jobs:
           LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
-          DATA_STORAGE_ROOT: ${{ github.workspace }}
+          DATA_STORAGE_ROOT: ${{ github.workspace }}/data-repo
           PYTHONIOENCODING: utf-8          
           # Benchmark context variables
           APP_VERSION: ${{ inputs.app_version }}
@@ -73,7 +73,7 @@ jobs:
 
       - name: Run Analytics
         env:
-          DATA_STORAGE_ROOT: ${{ github.workspace }}
+          DATA_STORAGE_ROOT: ${{ github.workspace }}/data-repo
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
         run: |
           cd main-repo/scripts/analytics
