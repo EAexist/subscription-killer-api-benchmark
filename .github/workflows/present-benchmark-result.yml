@@ -39,6 +39,7 @@ jobs:
           cache-dependency-path: |
             main-repo/scripts/langfuse_loader/requirements.txt
             main-repo/scripts/analytics/requirements.txt
+            main-repo/pyproject.toml
 
       - name: Install Langfuse Loader Dependencies
         run: |
