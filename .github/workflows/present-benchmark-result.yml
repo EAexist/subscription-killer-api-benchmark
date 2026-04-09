@@ -89,6 +89,8 @@ jobs:
 
       - name: Commit and Push Results
         run: |
+          cd data-repo
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
