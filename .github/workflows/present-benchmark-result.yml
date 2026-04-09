@@ -26,10 +26,9 @@ jobs:
           path: data-repo
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout Source Code (Main)
+      - name: Checkout Source Code
         uses: actions/checkout@v4
         with:
-          ref: main
           path: main-repo
 
       - name: Setup Python
