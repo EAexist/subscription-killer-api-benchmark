@@ -116,7 +116,7 @@ def main():
         visualizer.plot_cost_convergence(
             df_with_cma,
             plot_path,
-            "Amortized AI Operational Cost per Request",
+            "Total Amortized AI Operational Cost",
             "Amortized Cost",
         )
         logger.info(f"✅ Amortized cost plot saved to: {plot_path}")
@@ -137,7 +137,7 @@ def main():
                     visualizer.plot_cost_convergence(
                         task_cma,
                         task_plot_path,
-                        f"AI Cost per Request\n({task_name})",
+                        f"Amortized AI Operational Cost: {task_name.replace('_', ' ').title()}",
                         "Amortized Cost",
                     )
                     logger.info(f"✅ Task-specific plot saved to: {task_plot_path}")
