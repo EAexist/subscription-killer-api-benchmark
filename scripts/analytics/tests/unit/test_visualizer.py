@@ -6,11 +6,14 @@ import unittest
 import pandas as pd
 from analytics.calculator import BenchmarkCalculator
 from analytics.visualizer import BenchmarkVisualizer
+from analytics.config import get_plots_dir
 
 
 class TestBenchmarkVisualizer(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
+        self.persistent_plots_dir = get_plots_dir()
+        os.makedirs(self.persistent_plots_dir, exist_ok=True)
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
@@ -38,8 +41,8 @@ class TestBenchmarkVisualizer(unittest.TestCase):
         print(df_with_cma)
 
         visualizer = BenchmarkVisualizer()
-        output_path = os.path.join(self.temp_dir, "test_convergence.png")
-        visualizer.plot_cost_convergence(df_with_cma, output_path, "Test Plot Title", "Test X Label", show_plot=True)
+        output_path = os.path.join(self.persistent_plots_dir, "test_convergence.png")
+        visualizer.plot_cost_convergence(df_with_cma, output_path, "Test Plot Title", "Test X Label", show_plot=False)
 
         print(f"\n✅ Convergence plot saved to: {output_path}")
         print("Please check the generated plot to verify it looks correct.")

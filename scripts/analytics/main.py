@@ -83,7 +83,7 @@ def main():
 
     try:
         # Fetch with expected count - AI_BENCHMARK_K6_ITERATIONS is required
-        expected_count = os.getenv("AI_BENCHMARK_K6_ITERATIONS")
+        expected_count = int(os.getenv("AI_BENCHMARK_K6_ITERATIONS")) if os.getenv("AI_BENCHMARK_K6_ITERATIONS") else None
         if not expected_count:
             logger.error("❌ AI_BENCHMARK_K6_ITERATIONS environment variable is required")
             logger.error("Please set AI_BENCHMARK_K6_ITERATIONS in your .env.test file")
@@ -103,8 +103,8 @@ def main():
         logger.info("📈 Generating convergence plot...")
 
         # Fill missing requests up to expected count first
-        df_complete = BenchmarkCalculator.fill_missing_requests(
-            merged_df, int(expected_count)
+        df_complete = BenchmarkCalculator.normalize_request_count(
+            merged_df, expected_count
         )
         
         # Generate total cost plot with complete data

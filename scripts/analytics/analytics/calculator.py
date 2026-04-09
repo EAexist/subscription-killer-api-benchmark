@@ -40,9 +40,10 @@ class BenchmarkCalculator:
         return df_agg[["request_index", amortized_cost_col, "app_version"]].copy()
 
     @staticmethod
-    def fill_missing_requests(df: pd.DataFrame, n_request: int) -> pd.DataFrame:
+    def normalize_request_count(df: pd.DataFrame, n_request: int) -> pd.DataFrame:
         """
         Fill missing request indices with appropriate values up to n_request for each app version and task name combination.
+        Also removes any rows with request_index larger than n_request.
         
         Args:
             df: DataFrame with any columns (typically from load_and_merge_csv_files)
@@ -51,10 +52,17 @@ class BenchmarkCalculator:
         Returns:
             DataFrame with complete range of request indices from 1 to n_request for each app_version/task_name pair
         """
+        # Handle empty DataFrame
+        if df.empty:
+            return df.copy()
+        
         result_dfs = []
         
+        # First, filter out any rows with request_index > n_request
+        df_filtered = df[df['request_index'] <= n_request].copy()
+        
         # Group by both app_version and task_name to fill missing indices for each combination
-        for (app_version, task_name), group_data in df.groupby(['app_version', 'task_name'], dropna=False):
+        for (app_version, task_name), group_data in df_filtered.groupby(['app_version', 'task_name'], dropna=False):
             # Create complete range from 1 to n_request
             full_range = pd.DataFrame({'request_index': range(1, n_request + 1)})
             
@@ -82,4 +90,8 @@ class BenchmarkCalculator:
             result_dfs.append(merged_data)
         
         # Combine all groups
-        return pd.concat(result_dfs, ignore_index=True)
+        if result_dfs:
+            return pd.concat(result_dfs, ignore_index=True)
+        else:
+            # Return empty DataFrame with original columns if no groups were processed
+            return df[df.columns.intersection(['request_index', 'app_version', 'task_name'])].copy()

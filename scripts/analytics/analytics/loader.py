@@ -14,6 +14,12 @@ def load_and_merge_csv_files() -> pd.DataFrame:
     """Load all CSV files from data directory and merge them."""
 
     raw_data_dir = get_raw_data_dir()
+    
+    # Check if directory exists
+    if not raw_data_dir.exists():
+        print(f"Directory does not exist: {raw_data_dir}")
+        return pd.DataFrame()
+    
     csv_files = [f for f in os.listdir(raw_data_dir) if f.endswith(".csv")]
 
     if not csv_files:
