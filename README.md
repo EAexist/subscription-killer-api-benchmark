@@ -1,73 +1,31 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/EAexist/subscription-killer-api">
-
-[//]: # (    <img src="images/logo.png" alt="Logo" width="80" height="80">)
-  </a>
-
-<h3 align="center">Subscription Killer API Benchmark</h3>
-
+<h3 align="center">Sublog API Benchmark</h3>
   <p align="center">
-    Performance benchmarking suite for Subscription Killer API
+    Performance benchmarking suite for Sublog API
     <br />
     <br />
     <a href="https://github.com/EAexist/subscription-killer-api" target="_blank" rel="noopener noreferrer">Main Project</a>
   </p>
 </div>
 
-<!-- BENCHMARK_RESULTS -->
-<!-- BENCHMARK_RESULTS_START -->
-## 📊 Latest AI Cost Benchmark
+## Live Result
 
-### AI Token Usage and Cost
-
-| Metric | benchmark-test-b6f280ec | benchmark-test-c0466ce6 |
-|--------|--------|--------|
-| AI Cost | $0.317 / 1K requests | $0.799 / 1K requests (++152.1%) |
-| Input Token Count | 472 tokens | 1112 tokens |
-| Output Token Count | 27 tokens | 81 tokens |
-| Total Tokens | 499 tokens | 1193 tokens |
-
-*Model: gemini-3-flash-preview. Input Token Price: $0.50 / million. Output Token Price: $3.00 / million.
-
-### Supplementary Performance Indicators
-
-*Indicative metrics based on limited test iterations for development insights.*
-
-| Metric | benchmark-test-b6f280ec | benchmark-test-c0466ce6 |
-|--------|--------|--------|
-| Indicative Latency | 3.27 s | 28.18 s |
-| Gmail API Critical I/O | 1.63 s | 1.85 s |
-| AI Critical I/O | 1.18 s | 26.30 s |
-| Total Critical I/O | 2.52 s | 27.82 s |
-| Orchestration Overhead | 0.75 s | 0.37 s |
-
----
-*AI Cost Benchmark: 1 test iteration(s) per commit after 0 warmup exclusion.*
-<!-- BENCHMARK_RESULTS_END -->
-
+https://eaexist.github.io/sublog-api-benchmark
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This is the official benchmarking suite for the Subscription Killer API project.
+This is the official benchmarking suite for the Sublog API project.
 
 * **AI Cost Benchmarking**
   
   Measures and analyzes AI token usage and costs across different API configurations and commits.
 
-* **Indicative Performance Metrics Tracking**
-  
-  Tracks latency, critical I/O operations, and system performance indicators over time.
-
 * **Automated Testing**
   
   Integrates with CI/CD pipelines to automatically run benchmarks and detect performance regressions.
-
-* **Future-Ready Architecture**
-  
-  Designed to support additional benchmark types including precise performance measurements and load testing.
 
 
 ### Built With
@@ -75,30 +33,6 @@ This is the official benchmarking suite for the Subscription Killer API project.
 * [![Java][Java]][Java-url]
 * [![Python][Python]][Python-url]
 * [![k6][k6]][k6-url]
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-### Prerequisites
-
-- Java 17+
-- Maven 3.6+
-- Python 3.8+
-- Docker
-
-### Running Benchmarks
-
-```bash
-# Run AI Cost Benchmark
-./run-ai-benchmark.sh
-```
-
-### Configuration
-
-Copy `.env.example` to `.env` and configure:
-- AI model pricing
-- Benchmark parameters
-- Docker settings
 
 <!-- LICENSE -->
 ## License
