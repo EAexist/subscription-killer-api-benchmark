@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmail-mock-server"
+version = "0.1.0"
+requires-python = ">=3.8"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.0.0",
+    "pytest>=7.0.0",
+    "python-dotenv>=1.0.0",
+    "huggingface_hub>=1.6.0",
+    "datasets>=4.6.1",
+    "datasets-shared @ git+https://huggingface.co/datasets/hyeon-expression/subscription-killer-synthetic-emails.git",
+]
+
+[tool.setuptools]
+packages = ["gmail_mock_server"]
+
+[tool.setuptools.package-dir]
+"" = "."
+
+[tool.pyright]
+reportMissingImports = true
+typeCheckingMode = "basic"
+extraPaths = ["."] 

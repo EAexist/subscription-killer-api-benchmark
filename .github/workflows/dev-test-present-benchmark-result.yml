@@ -1,0 +1,20 @@
+name: "DEV: Benchmark Result Test"
+
+on: 
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID for the benchmark'
+        required: true
+      app_version:
+        description: 'Version tag to test'
+        required: true
+
+jobs:
+  run-present-benchmark-result:
+    uses: ./.github/workflows/present-benchmark-result.yml
+    with:
+      run_id: ${{ inputs.run_id }}
+      app_version: ${{ inputs.app_version }}
+      data_branch: data-test
+    secrets: inherit

@@ -1,15 +1,20 @@
-name: Benchmark Test (No Execution)
+name: "DEV: Benchmark Test"
 
 on:
+  repository_dispatch:
+    types: [new_ai_benchmark_build_test]
   workflow_dispatch:
     inputs:
-      APP_GIT_TAG:
-        description: 'Git tag for release naming'
-        required: true
-        type: string
+      skip_benchmark:
+        description: 'Skip benchmark job'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
-  test-benchmark-data:
-    uses: ./.github/workflows/benchmark-release.yml
+  test-benchmark:
+    uses: ./.github/workflows/benchmark.yml
     with:
-      APP_GIT_TAG: ${{ github.event.inputs.APP_GIT_TAG || 'benchmark-test' }}
+      data_branch: data-test
+      skip_benchmark: ${{ inputs.skip_benchmark || false }}
+    secrets: inherit
