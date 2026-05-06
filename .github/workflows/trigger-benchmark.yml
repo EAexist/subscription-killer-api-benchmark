@@ -1,0 +1,57 @@
+name: "DEV: Trigger Benchmark "
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_branch:
+        description: 'Data branch for benchmark results'
+        default: 'data-test'
+        required: true
+
+jobs:
+  trigger-benchmark:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: read
+    steps:
+      - name: Fetch Latest Image from GHCR
+        id: get_image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Standardize names based on your Docker config
+          OWNER="eaexist"
+          PACKAGE_NAME="subscription-killer-api"
+          
+          echo "Fetching latest version for $OWNER/$PACKAGE_NAME..."
+
+          # 2. Use the /users/ endpoint for personal accounts (instead of /orgs/)
+          # We grab the first version [0] and its first tag [0]
+          LATEST_TAG=$(gh api "users/$OWNER/packages/container/$PACKAGE_NAME/versions" \
+            --jq '.[0].metadata.container.tags[0]')
+
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" == "null" ]; then
+            echo "::error::Could not find any tags for package $PACKAGE_NAME. Check if PAT has read:packages scope."
+            exit 1
+          fi
+
+          FULL_IMAGE="ghcr.io/$OWNER/$PACKAGE_NAME:$LATEST_TAG"
+          
+          echo "Found Image: $FULL_IMAGE"
+          echo "image_name=$FULL_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Dispatch Benchmark Event
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PAT_TRIGGER_DEV }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/EAexist/subscription-killer-api-benchmark/dispatches \
+            -d '{
+              "event_type": "new_ai_benchmark_build_test", 
+              "client_payload": {
+                "image_name": "${{ steps.get_image.outputs.image_name }}",
+                "branch": "chore/ai-benchmark-ci",
+                "data_branch": "${{ github.event.inputs.data_branch }}"
+              }
+            }'

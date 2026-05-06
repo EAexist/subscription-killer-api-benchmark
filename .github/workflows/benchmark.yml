@@ -1,8 +1,23 @@
-name: Benchmark Trigger
+name: Benchmark Run
 
 on:
   repository_dispatch:
     types: [new_ai_benchmark_build]
+  workflow_call:
+    inputs:
+      data_branch:
+        description: 'Data branch to checkout'
+        required: false
+        type: string
+        default: 'data'
+      skip_benchmark:
+        description: 'Skip benchmark job (useful for debugging)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  DATA_BRANCH: ${{ inputs.data_branch || 'data' }}
 
 jobs:
   run-benchmark:
@@ -13,11 +28,19 @@ jobs:
     outputs:
       benchmark_dir: ${{ steps.extract-metadata.outputs.benchmark_dir }}
       app_git_tag: ${{ steps.extract-metadata.outputs.app_git_tag }}
+      run_id: ${{ steps.set-run-id.outputs.run_id }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout Data Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DATA_BRANCH }}
+          path: data-storage
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
@@ -91,12 +114,29 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Pull Mock Server
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ghcr.io/${OWNER}/gmail-mock-server:latest
+          docker tag ghcr.io/${OWNER}/gmail-mock-server:latest gmail-mock-server:latest
+
+      - name: Set Run Id
+        run: |
+          echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+          echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+        id: set-run-id
+
+      # TODO: Update benchmark script to output results directly to data-storage/results/runs/ instead of results/
+      # This will eliminate the need for copying and use the data branch approach consistently
       - name: Run Benchmark
+        if: ${{ !inputs.skip_benchmark }}
         env:
           # Only benchmark-specific variables
           APP_GIT_COMMIT: ${{ env.APP_GIT_COMMIT }}
           APP_GIT_TAG: ${{ env.APP_GIT_TAG }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          RESULTS_DIR: data-storage  # Use data-storage directly
+          RUN_ID: "${{ env.RUN_ID }}"
 
           # AI Cost Benchmark configuration
           GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION: ${{ vars.GEMINI_3_FLASH_PREVIEW_INPUT_TOKEN_PRICE_PER_MILLION }}
@@ -105,6 +145,8 @@ jobs:
           AI_BENCHMARK_ENDPOINT: ${{ vars.AI_BENCHMARK_ENDPOINT }}
           AI_BENCHMARK_K6_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_ITERATIONS }}
           AI_BENCHMARK_K6_WARMUP_ITERATIONS: ${{ vars.AI_BENCHMARK_K6_WARMUP_ITERATIONS }}
+          N_EMAILS_PER_REQUEST: ${{ vars.N_EMAILS_PER_REQUEST }}
+          N_COMPANIES_PER_CHUNK: ${{ vars.N_COMPANIES_PER_CHUNK }}
           AI_BENCHMARK_REQUEST_TIMEOUT: ${{ vars.AI_BENCHMARK_REQUEST_TIMEOUT }}
         run: |
           chmod +x run-ai-benchmark.sh
@@ -114,14 +156,20 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ai-benchmark-results-${{ env.APP_GIT_TAG }}
-          path: |
-            results/ai-benchmark/${{ env.APP_GIT_TAG }}
-            results/reports/
-          retention-days: 30
+          name: benchmark-run-${{ env.RUN_ID }}
+          path: data-storage/logs/
+          retention-days: 7
+
+      - name: Wait for Langfuse Data Sync
+        run: |
+          echo "Waiting 60 seconds for Langfuse data to sync..."
+          sleep 60
 
   process-benchmark-data:
     needs: run-benchmark
-    uses: ./.github/workflows/benchmark-release.yml
+    uses: ./.github/workflows/present-benchmark-result.yml
     with:
-      app_git_tag: ${{ needs.run-benchmark.outputs.app_git_tag }}
+      app_version: ${{ needs.run-benchmark.outputs.app_git_tag }}
+      data_branch: ${{ inputs.data_branch || 'data' }}
+      run_id: ${{ needs.run-benchmark.outputs.run_id }}
+    secrets: inherit

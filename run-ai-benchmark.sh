@@ -36,11 +36,11 @@ echo "   Request Timeout: ${AI_BENCHMARK_REQUEST_TIMEOUT:-not-set}"
 echo "   Verbose Docker Logs: ${AI_BENCHMARK_ENABLE_VERBOSE_DOCKER_LOGS:-not-set}"
 
 # Validate required variables
-if [ -z "$APP_GIT_COMMIT" ]; then
-    echo "❌ Error: APP_GIT_COMMIT is required but not set!"
-    echo "   Set it in .env file or as environment variable"
-    exit 1
-fi
+#if [ -z "$APP_GIT_COMMIT" ]; then
+#    echo "❌ Error: APP_GIT_COMMIT is required but not set!"
+#    echo "   Set it in .env file or as environment variable"
+#    exit 1
+#fi
 
 if [ -z "$AI_BENCHMARK_K6_ITERATIONS" ]; then
     echo "⚠️  Warning: AI_BENCHMARK_K6_ITERATIONS not set, using default: 1"
